@@ -1,6 +1,6 @@
 {
   "name": "@leep-frog/vscode-test-stubber",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Library for stubbing vscode logic during vscode-test-cli execution",
   "main": "./dist/src/index.js",
   "module": "./dist/index.mjs",
