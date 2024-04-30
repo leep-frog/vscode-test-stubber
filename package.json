@@ -2,15 +2,19 @@
   "name": "@leep-frog/vscode-test-stubber",
   "version": "1.0.0",
   "description": "Library for stubbing vscode logic during vscode-test-cli execution",
-  "main": "./dist/index.js",
+  "main": "./dist/src/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "engines": {
+    "vscode": "^1.81.0"
+  },
   "scripts": {
-    "build": "tsup",
-    "test": "jest"
+    "compile": "tsc -p ./",
+    "test": "jest",
+    "publish": "npm publish --access public"
   },
   "author": "leep-frog",
   "license": "ISC",
@@ -23,7 +27,6 @@
   },
   "dependencies": {
     "@types/vscode": "^1.88.0",
-    "json-ignore": "^0.4.0",
-    "tsup": "^8.0.2"
+    "json-ignore": "^0.4.0"
   }
 }
