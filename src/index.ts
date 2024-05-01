@@ -2,6 +2,8 @@ import { readFileSync, writeFileSync } from 'fs';
 import { jsonIgnoreReplacer } from 'json-ignore';
 import * as vscode from 'vscode';
 
+// TODO: Move these all to other files
+
 const stubbableTestFilePath = process.env.VSCODE_STUBBABLE_TEST_FILE;
 
 export interface StubbablesConfig {
@@ -10,11 +12,17 @@ export interface StubbablesConfig {
   gotQuickPickOptions?: vscode.QuickPickItem[][];
   changed?: boolean;
   error?: string;
+
+  startingWorkspaceConfiguration?: WorkspaceConfiguration;
+  resultingWorkspaceConfiguration?: WorkspaceConfiguration;
 }
+
+// TODO: init method and use starting workspace configuration
 
 export const TEST_MODE: boolean = !!stubbableTestFilePath;
 
 export const stubbables = {
+
   // Stubbable command to create a quick pick controllable in tests
   createQuickPick: <T extends vscode.QuickPickItem> () => {
     return runStubbableMethodNoInput<vscode.QuickPick<T>>(
@@ -22,6 +30,19 @@ export const stubbables = {
       () => new FakeQuickPick(vscode.window.createQuickPick()),
     )();
   },
+
+  // Stubbable command to get the workspace configuration
+  vscodeWorkspaceGetConfiguration: runStubbableMethodNoInput<vscode.WorkspaceConfiguration>(
+    () => vscode.workspace.getConfiguration(),
+    (sc: StubbablesConfig) => {
+      if (!stubWorkspaceConfiguration.cfg) {
+        stubWorkspaceConfiguration.cfg = new FakeWorkspaceConfiguration(sc.startingWorkspaceConfiguration);
+      }
+
+      return stubWorkspaceConfiguration.cfg!;
+    },
+  ),
+
   // Stubbable command to show a quick pick controllable in tests
   showQuickPick: runStubbableMethod<vscode.QuickPick<vscode.QuickPickItem>, Thenable<void>>(
     async (qp: vscode.QuickPick<vscode.QuickPickItem>) => qp.show(),
@@ -413,3 +434,85 @@ class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.QuickPick<
 
   public dispose(): void { this.realQuickPick.dispose(); }
 }
+
+// Workspace configuration
+
+const CONFIGURATION_TARGET_ORDER = [
+  vscode.ConfigurationTarget.WorkspaceFolder,
+  vscode.ConfigurationTarget.Workspace,
+  vscode.ConfigurationTarget.Global,
+];
+
+export type WorkspaceConfiguration = Map<vscode.ConfigurationTarget, Map<string, any>>;
+
+class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
+
+  // Map from scope, to subsection, to value
+  readonly configurations: WorkspaceConfiguration;
+
+  constructor(startingConfiguration?: WorkspaceConfiguration) {
+    this.configurations = startingConfiguration || new Map<vscode.ConfigurationTarget, Map<string, any>>();
+  }
+
+  get<T>(section: string, defaultValue?: T): T | undefined {
+    for (const configurationTarget of CONFIGURATION_TARGET_ORDER) {
+      const cfg = this.configurations.get(configurationTarget)?.get(section);
+      if (cfg) {
+        return cfg;
+      }
+    }
+    return defaultValue;
+  }
+
+  has(section: string): boolean {
+    return CONFIGURATION_TARGET_ORDER.some(configurationTarget => !!(this.configurations.get(configurationTarget)?.has(section)));
+  }
+
+  inspect<T>(section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
+    throw new Error(`FakeWorkspaceConfiguration.inspect is not yet supported`);
+  }
+
+  async update(section: string, value: any, unqualifiedConfigurationTarget?: boolean | vscode.ConfigurationTarget | null | undefined, overrideInLanguage?: boolean | undefined): Promise<void> {
+    const configurationTarget = this.parseConfigurationTarget(unqualifiedConfigurationTarget);
+
+    if (!!overrideInLanguage) {
+      throw new Error(`overrideInLanguage is not yet supported`);
+    }
+
+    if (!this.configurations.has(configurationTarget)) {
+      this.configurations.set(configurationTarget, new Map<string, any>());
+    }
+    this.configurations.get(configurationTarget)!.set(section, value);
+    return;
+  }
+
+  parseConfigurationTarget(configurationTarget: boolean | vscode.ConfigurationTarget | null | undefined): vscode.ConfigurationTarget {
+    if (configurationTarget === vscode.ConfigurationTarget.Global) {
+      return vscode.ConfigurationTarget.Global;
+    }
+
+    if (configurationTarget === vscode.ConfigurationTarget.Workspace) {
+      return vscode.ConfigurationTarget.Workspace;
+    }
+
+    if (configurationTarget === vscode.ConfigurationTarget.WorkspaceFolder) {
+      return vscode.ConfigurationTarget.WorkspaceFolder;
+    }
+
+    if (configurationTarget === true) {
+      return vscode.ConfigurationTarget.Global;
+    }
+
+    if (configurationTarget === false) {
+      return vscode.ConfigurationTarget.Workspace;
+    }
+
+    return vscode.ConfigurationTarget.Workspace;
+  }
+}
+
+interface WorkspaceConfigurationStub {
+  cfg?: FakeWorkspaceConfiguration;
+}
+
+const stubWorkspaceConfiguration: WorkspaceConfigurationStub = {}
