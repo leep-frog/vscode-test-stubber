@@ -26,7 +26,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@types/vscode": "^1.88.0",
+    "@types/vscode": "^1.81.0",
     "json-ignore": "^0.4.0"
   }
 }
