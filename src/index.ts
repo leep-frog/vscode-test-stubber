@@ -602,7 +602,7 @@ export function nestedGet(map: Map<string, any>, keys: string[]) {
       throw new Error(`Expected nested value to be a map but was: ${typeof(cur)}`);
     }
 
-    const key = keys[0];
+    const key = keys.at(i)!;
     if (!cur.has(key)) {
       return undefined;
     }

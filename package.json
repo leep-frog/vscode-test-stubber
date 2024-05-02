@@ -31,7 +31,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test --coverage --coverageReporter lcov --coverageReporter html"
   },
   "publishConfig": {
     "access": "public"
