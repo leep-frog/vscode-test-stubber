@@ -1,2 +1,3 @@
 This module was created by following the instructions in
-[this tutorial](https://pauloe-me.medium.com/typescript-npm-package-publishing-a-beginners-guide-40b95908e69c).
+[this tutorial](https://pauloe-me.medium.com/typescript-npm-package-publishing-a-beginners-guide-40b95908e69c)
+after creating a VS-Code extension (via `yo code`).

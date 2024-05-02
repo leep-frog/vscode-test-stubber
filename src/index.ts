@@ -21,6 +21,11 @@ export interface StubbablesConfig {
 
 export const TEST_MODE: boolean = !!stubbableTestFilePath;
 
+export interface GetConfigurationProps {
+  section?: string;
+  scope?: vscode.ConfigurationScope;
+};
+
 export const stubbables = {
 
   // Stubbable command to create a quick pick controllable in tests
@@ -32,9 +37,9 @@ export const stubbables = {
   },
 
   // Stubbable command to get the workspace configuration
-  vscodeWorkspaceGetConfiguration: runStubbableMethodNoInput<vscode.WorkspaceConfiguration>(
-    () => vscode.workspace.getConfiguration(),
-    (sc: StubbablesConfig) => {
+  vscodeWorkspaceGetConfiguration: runStubbableMethod<GetConfigurationProps, vscode.WorkspaceConfiguration>(
+    (props: GetConfigurationProps) => vscode.workspace.getConfiguration(props.section, props.scope),
+    (props: GetConfigurationProps, sc: StubbablesConfig) => {
       if (!stubWorkspaceConfiguration.cfg) {
         stubWorkspaceConfiguration.cfg = new FakeWorkspaceConfiguration(sc.startingWorkspaceConfiguration);
       }
@@ -456,9 +461,9 @@ class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
 
   get<T>(section: string, defaultValue?: T): T | undefined {
     for (const configurationTarget of CONFIGURATION_TARGET_ORDER) {
-      const cfg = this.configurations.get(configurationTarget)?.get(section);
-      if (cfg) {
-        return cfg;
+      const hasKey = !!(this.configurations.get(configurationTarget)?.has(section));
+      if (hasKey) {
+        return this.configurations.get(configurationTarget)!.get(section)!;
       }
     }
     return defaultValue;
@@ -511,8 +516,99 @@ class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
   }
 }
 
+/*class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
+
+  // Map from scope, to subsection, to value
+  readonly globalConfiguration: FakeWorkspaceConfiguration;
+  readonly configurationTarget: vscode.ConfigurationTarget;
+  readonly section?: string;
+  readonly scope?: vscode.ConfigurationScope
+
+  constructor(globalConfiguration: FakeWorkspaceConfiguration, configurationTarget: vscode.ConfigurationTarget, section?: string, scope?: vscode.ConfigurationScope) {
+    this.globalConfiguration = globalConfiguration;
+    this.configurationTarget = configurationTarget;
+    this.section = section;
+    this.scope = scope;
+  }
+
+  // TODO: nested get with dot notation (e.g. faves.favorite)
+  get<T>(section: string, defaultValue?: T): T | undefined {
+    const hasKey = !!(this.globalConfiguration.configurations.get(this.configurationTarget)?.has(section));
+    if (hasKey) {
+      return this.globalConfiguration.configurations.get(this.configurationTarget)!.get(section)!;
+    }
+    return defaultValue;
+  }
+
+  has(section: string): boolean {
+    const value = this.get(section);
+    return CONFIGURATION_TARGET_ORDER.some(configurationTarget => !!(this.configurations.get(configurationTarget)?.has(section)));
+  }
+
+  inspect<T>(section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
+    throw new Error(`FakeWorkspaceConfiguration.inspect is not yet supported`);
+  }
+
+  async update(section: string, value: any, unqualifiedConfigurationTarget?: boolean | vscode.ConfigurationTarget | null | undefined, overrideInLanguage?: boolean | undefined): Promise<void> {
+    const configurationTarget = this.parseConfigurationTarget(unqualifiedConfigurationTarget);
+
+    if (!!overrideInLanguage) {
+      throw new Error(`overrideInLanguage is not yet supported`);
+    }
+
+    if (!this.configurations.has(configurationTarget)) {
+      this.configurations.set(configurationTarget, new Map<string, any>());
+    }
+    this.configurations.get(configurationTarget)!.set(section, value);
+    return;
+  }
+
+  parseConfigurationTarget(configurationTarget: boolean | vscode.ConfigurationTarget | null | undefined): vscode.ConfigurationTarget {
+    if (configurationTarget === vscode.ConfigurationTarget.Global) {
+      return vscode.ConfigurationTarget.Global;
+    }
+
+    if (configurationTarget === vscode.ConfigurationTarget.Workspace) {
+      return vscode.ConfigurationTarget.Workspace;
+    }
+
+    if (configurationTarget === vscode.ConfigurationTarget.WorkspaceFolder) {
+      return vscode.ConfigurationTarget.WorkspaceFolder;
+    }
+
+    if (configurationTarget === true) {
+      return vscode.ConfigurationTarget.Global;
+    }
+
+    if (configurationTarget === false) {
+      return vscode.ConfigurationTarget.Workspace;
+    }
+
+    return vscode.ConfigurationTarget.Workspace;
+  }
+}*/
+
 interface WorkspaceConfigurationStub {
   cfg?: FakeWorkspaceConfiguration;
 }
 
-const stubWorkspaceConfiguration: WorkspaceConfigurationStub = {}
+const stubWorkspaceConfiguration: WorkspaceConfigurationStub = {};
+
+export function nestedGet(map: Map<string, any>, keys: string[]) {
+
+  let cur: any = map;
+  for (let i = 0; i < keys.length; i++) {
+    if (!(cur instanceof Map)) {
+      throw new Error(`Expected nested value to be a map but was: ${typeof(cur)}`);
+    }
+
+    const key = keys[0];
+    if (!cur.has(key)) {
+      return undefined;
+    }
+
+    cur = cur.get(key);
+  }
+
+  return cur;
+}
