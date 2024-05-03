@@ -8,7 +8,7 @@ export { testSetup, testVerify } from './verify';
 export { FakeWorkspaceConfiguration } from './workspace-configuration';
 
 // STUBS is the object that contains all stubbable VS Code methods.
-interface Stubs {
+interface VSCodeStubs {
   /**
    * Stubbable command to create a quick pick controllable in tests.
    * Replace any instances of vscode.window.createQuickPick() with this method.
@@ -40,8 +40,8 @@ interface Stubs {
   vscodeWorkspaceGetConfiguration: (inpupt: GetConfigurationProps) => vscode.WorkspaceConfiguration;
 }
 
-// STUBS is the object that contains all stubbable VS Code methods.
-export const STUBS: Stubs = {
+// VSCODE_STUBS is the object that contains all stubbable VS Code methods.
+export const VSCODE_STUBS: VSCodeStubs = {
   createQuickPick: createQuickPick,
   showQuickPick: showQuickPick(),
   vscodeWorkspaceGetConfiguration: vscodeWorkspaceGetConfiguration(),
