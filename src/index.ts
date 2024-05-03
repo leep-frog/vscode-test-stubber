@@ -3,6 +3,8 @@ import { GetConfigurationProps } from '../dist';
 import { createQuickPick, showQuickPick } from './quick-pick';
 import { vscodeWorkspaceGetConfiguration } from './workspace-configuration';
 
+export { CloseQuickPickAction, NoOpQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectItemQuickPickAction } from './quick-pick';
+export { StubbablesConfig, TEST_MODE } from './run-stubbable';
 export { FakeWorkspaceConfiguration } from './workspace-configuration';
 
 // STUBS is the object that contains all stubbable VS Code methods.

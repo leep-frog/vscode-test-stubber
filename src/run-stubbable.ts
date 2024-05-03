@@ -17,18 +17,21 @@ export interface StubbablesConfig {
   // The set of quick pick Actions.
   quickPickActions?: QuickPickAction[];
 
+  // The expected set of quick pick executions to have run during the test
+  expectedQuickPickExecutions?: (vscode.QuickPickItem | string)[][];
+
   // The vscode.WorkspaceConfiguration that is configured at the start of the test (this can be modified during test execution).
   workspaceConfiguration?: WorkspaceConfiguration;
+
+  // The expected vscode.WorkspaceConfiguration at the end of the test. If unset, then the test will verify that
+  // the configuration was unchanged.
+  expectedWorkspaceConfiguration?: WorkspaceConfiguration;
 }
 
 // StubbablesConfigInternal is an internal model used for storing additional fields required for testing.
 export interface StubbablesConfigInternal extends StubbablesConfig {
   // The quick picks that were generated.
   gotQuickPickOptions?: vscode.QuickPickItem[][];
-
-  // The expected vscode.WorkspaceConfiguration at the end of the test. If unset, then the test will verify that
-  // the configuration was unchanged.
-  expectedWorkspaceConfiguration?: WorkspaceConfiguration;
 
   // If there is any error in stubbables configuration internal logic, it is set here.
   error?: string;
