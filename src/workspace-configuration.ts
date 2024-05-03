@@ -1,6 +1,35 @@
 import * as vscode from 'vscode';
-import { StubbablesConfig } from '.';
 import { nestedGet, nestedHas, nestedSet } from './nested';
+import { StubbablesConfigInternal, runStubbableMethod } from './run-stubbable';
+
+export interface GetConfigurationProps {
+  section?: string;
+  scope?: vscode.ConfigurationScope;
+};
+
+export function vscodeWorkspaceGetConfiguration(): (input: GetConfigurationProps) => vscode.WorkspaceConfiguration {
+  return runStubbableMethod<GetConfigurationProps, vscode.WorkspaceConfiguration>(
+    (props: GetConfigurationProps) => vscode.workspace.getConfiguration(props.section, props.scope),
+    (props: GetConfigurationProps, sc: StubbablesConfigInternal) => {
+      if (props.scope) {
+        sc.error = "ConfigurationScope is not yet supported";
+        throw new Error("ConfigurationScope is not yet supported");
+      }
+
+      if (!stubWorkspaceConfiguration.cfg) {
+        stubWorkspaceConfiguration.cfg = new FakeWorkspaceConfiguration(sc, sc.workspaceConfiguration);
+      }
+
+      if (props.section) {
+        // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
+        // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
+        return stubWorkspaceConfiguration.cfg!.scopedConfiguration(props.section.split("."));
+      }
+
+      return stubWorkspaceConfiguration.cfg!;
+    },
+  );
+}
 
 export const CONFIGURATION_TARGET_ORDER = [
   vscode.ConfigurationTarget.WorkspaceFolder,
@@ -14,9 +43,9 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
 
   // Map from scope, to subsection, to value
   readonly configurations: WorkspaceConfiguration;
-  readonly sc: StubbablesConfig;
+  readonly sc: StubbablesConfigInternal;
 
-  constructor(sc: StubbablesConfig, startingConfiguration?: WorkspaceConfiguration) {
+  constructor(sc: StubbablesConfigInternal, startingConfiguration?: WorkspaceConfiguration) {
     this.sc = sc;
     this.configurations = startingConfiguration || new Map<vscode.ConfigurationTarget, Map<string, any>>();
   }
