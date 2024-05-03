@@ -19,13 +19,13 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
     internalCfg.expectedWorkspaceConfiguration = config?.workspaceConfiguration;
   }
 
-  writeFileSync(stubbableTestFile, JSON.stringify(internalCfg || {}));
+  writeFileSync(stubbableTestFile, JSON.stringify(internalCfg || {}, jsonIgnoreReplacer));
 }
 
 
 export function testVerify(stubbableTestFile: string) {
   // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-  const finalConfig: StubbablesConfigInternal = JSON.parse(readFileSync(stubbableTestFile).toString());
+  const finalConfig: StubbablesConfigInternal = JSON.parse(readFileSync(stubbableTestFile).toString(), jsonIgnoreReplacer);
   assertUndefined(finalConfig.error, "StubbablesConfig.error");
 
   // Verify quick pick interactions
