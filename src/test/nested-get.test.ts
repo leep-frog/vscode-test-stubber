@@ -164,6 +164,7 @@ suite('nestedGet tests', () => {
 
       const section = tc.keys.join(".");
       for (const target of CONFIGURATION_TARGET_ORDER) {
+        // Workspace configuration tests
         const cfg = new FakeWorkspaceConfiguration(new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [target, tc.map],
         ]));
@@ -172,6 +173,14 @@ suite('nestedGet tests', () => {
         const cfgHas = cfg.has(section);
         assert.deepStrictEqual(cfgGot, tc.wantCfg);
         assert.deepStrictEqual(cfgHas, tc.wantCfgHas);
+
+        // Scoped workspace configuration tests
+        const scopedCfg = cfg.scopedConfiguration([]);
+
+        const scopedCfgGot = scopedCfg.get(section);
+        const scopedCfgHas = scopedCfg.has(section);
+        assert.deepStrictEqual(scopedCfgGot, tc.wantCfg);
+        assert.deepStrictEqual(scopedCfgHas, tc.wantCfgHas);
       }
     });
   });

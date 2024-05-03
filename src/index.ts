@@ -564,8 +564,8 @@ class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration 
     return this.globalConfiguration.has(this.nestedSection(section));
   }
 
-  inspect<T>(section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
-    throw new Error(`FakeWorkspaceConfiguration.inspect is not yet supported`);
+  inspect<T>(_section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
+    throw new Error(`FakeScopedWorkspaceConfiguration.inspect is not yet supported`);
   }
 
   async update(section: string, value: any, unqualifiedConfigurationTarget?: boolean | vscode.ConfigurationTarget | null | undefined, overrideInLanguage?: boolean | undefined): Promise<void> {
@@ -586,8 +586,6 @@ export function nestedHas(map: Map<string, any>, keys: string[]): boolean {
 export function nestedGet(map: Map<string, any>, keys: string[]): any {
   return nestedDo(map, keys, (v: any) => v, () => undefined);
 }
-
-type configurationMapType = Map<string, any>;
 
 function nestedDo<T>(map: Map<string, any>, keys: string[], hasFn: (v: any) => T, missingFn: () => T): T {
 
