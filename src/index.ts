@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import { GetConfigurationProps } from '../dist';
 import { createQuickPick, showQuickPick } from './quick-pick';
-import { vscodeWorkspaceGetConfiguration } from './workspace-configuration';
+import { GetConfigurationProps, vscodeWorkspaceGetConfiguration } from './workspace-configuration';
 
 export { CloseQuickPickAction, NoOpQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectItemQuickPickAction } from './quick-pick';
 export { StubbablesConfig, TEST_MODE } from './run-stubbable';

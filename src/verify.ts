@@ -23,7 +23,7 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
 }
 
 
-export function testVerify(stubbableTestFile: string, config?: StubbablesConfig) {
+export function testVerify(stubbableTestFile: string) {
   // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
   const finalConfig: StubbablesConfigInternal = JSON.parse(readFileSync(stubbableTestFile).toString());
   assertUndefined(finalConfig.error, "StubbablesConfig.error");
