@@ -2,7 +2,7 @@ import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
 import { jsonIgnoreReplacer } from "json-ignore";
 import * as vscode from 'vscode';
-import { createQuickPick } from "./quick-pick";
+import { quickPickOneTimeSetup } from "./quick-pick";
 import { StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
 // Set of data to store during tests
@@ -35,7 +35,7 @@ function oneTimeSetup() {
     originalShowError(s);
   };
 
-  vscode.window.createQuickPick = createQuickPick;
+  quickPickOneTimeSetup();
   didOneTime = true;
 }
 

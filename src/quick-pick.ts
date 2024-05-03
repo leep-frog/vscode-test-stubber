@@ -8,6 +8,10 @@ export function createQuickPick<T extends vscode.QuickPickItem>() {
   )();
 }
 
+export function quickPickOneTimeSetup() {
+  vscode.window.createQuickPick = () => new FakeQuickPick(vscode.window.createQuickPick());
+}
+
 export function showQuickPick() {
   return runStubbableMethod<vscode.QuickPick<vscode.QuickPickItem>, Thenable<void>>(
     async (qp: vscode.QuickPick<vscode.QuickPickItem>) => qp.show(),
