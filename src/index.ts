@@ -533,7 +533,7 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
       return vscode.ConfigurationTarget.Workspace;
     }
 
-    return vscode.ConfigurationTarget.Workspace;
+    return vscode.ConfigurationTarget.WorkspaceFolder;
   }
 }
 
