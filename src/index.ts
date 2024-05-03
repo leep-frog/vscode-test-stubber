@@ -1,8 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { jsonIgnoreReplacer } from 'json-ignore';
 import * as vscode from 'vscode';
-import { WorkspaceConfiguration } from '../dist';
-import { FakeWorkspaceConfiguration, stubWorkspaceConfiguration } from './workspace-configuration';
+import { FakeWorkspaceConfiguration, WorkspaceConfiguration, stubWorkspaceConfiguration } from './workspace-configuration';
 
 export { FakeWorkspaceConfiguration } from './workspace-configuration';
 

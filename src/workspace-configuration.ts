@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { nestedGet } from '../dist';
-import { nestedHas, nestedSet } from './nested';
+import { nestedGet, nestedHas, nestedSet } from './nested';
 
 export const CONFIGURATION_TARGET_ORDER = [
   vscode.ConfigurationTarget.WorkspaceFolder,
