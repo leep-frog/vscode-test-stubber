@@ -15,6 +15,27 @@ const testData: TestData = {
   errorMessages: [],
 };
 
+let didOneTime = false;
+
+function oneTimeSetup() {
+  if (didOneTime) {
+    return;
+  }
+
+  // TODO: try/finally to ensure these are reset (is this really needed though?)
+  const originalShowInfo = vscode.window.showInformationMessage;
+  vscode.window.showInformationMessage = async (s: string) => {
+    testData.infoMessages.push(s);
+    originalShowInfo(s);
+  };
+  const originalShowError = vscode.window.showErrorMessage;
+  vscode.window.showErrorMessage = async (s: string) => {
+    testData.errorMessages.push(s);
+    originalShowError(s);
+  };
+  didOneTime = true;
+}
+
 /**
  * Setup the stubs for use in the test.
  *
@@ -36,17 +57,7 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   testData.infoMessages = [];
   testData.errorMessages = [];
 
-  // TODO: try/finally to ensure these are reset (is this really needed though?)
-  const originalShowInfo = vscode.window.showInformationMessage;
-  vscode.window.showInformationMessage = async (s: string) => {
-    testData.infoMessages.push(s);
-    originalShowInfo(s);
-  };
-  const originalShowError = vscode.window.showErrorMessage;
-  vscode.window.showErrorMessage = async (s: string) => {
-    testData.errorMessages.push(s);
-    originalShowError(s);
-  };
+  oneTimeSetup();
 }
 
 
