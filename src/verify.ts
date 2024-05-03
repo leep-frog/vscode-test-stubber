@@ -4,7 +4,6 @@ import { jsonIgnoreReplacer } from "json-ignore";
 import * as vscode from 'vscode';
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
-import { workspaceConfigurationSetup } from "./workspace-configuration";
 
 // Set of data to store during tests
 interface TestData {
@@ -60,8 +59,6 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   // Stub out message functions
   testData.infoMessages = [];
   testData.errorMessages = [];
-
-  workspaceConfigurationSetup(internalCfg);
 
   oneTimeSetup();
 }
