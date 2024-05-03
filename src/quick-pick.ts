@@ -1,15 +1,9 @@
 import * as vscode from 'vscode';
-import { StubbablesConfigInternal, runStubbableMethod, runStubbableMethodNoInput } from './run-stubbable';
-
-export function createQuickPick<T extends vscode.QuickPickItem>() {
-  return runStubbableMethodNoInput<vscode.QuickPick<T>>(
-    vscode.window.createQuickPick,
-    () => new FakeQuickPick(vscode.window.createQuickPick()),
-  )();
-}
+import { StubbablesConfigInternal, runStubbableMethod } from './run-stubbable';
 
 export function quickPickOneTimeSetup() {
-  vscode.window.createQuickPick = () => new FakeQuickPick(vscode.window.createQuickPick());
+  const originalFunc = vscode.window.createQuickPick;
+  vscode.window.createQuickPick = () => new FakeQuickPick(originalFunc());
 }
 
 export function showQuickPick() {

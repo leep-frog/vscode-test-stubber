@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { createQuickPick, showQuickPick } from './quick-pick';
-import { GetConfigurationProps, vscodeWorkspaceGetConfiguration } from './workspace-configuration';
+import { showQuickPick } from './quick-pick';
 
 export { CloseQuickPickAction, NoOpQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectItemQuickPickAction } from './quick-pick';
 export { StubbablesConfig, TEST_MODE } from './run-stubbable';
@@ -9,16 +8,6 @@ export { FakeWorkspaceConfiguration } from './workspace-configuration';
 
 // STUBS is the object that contains all stubbable VS Code methods.
 interface VSCodeStubs {
-  /**
-   * Stubbable command to create a quick pick controllable in tests.
-   * Replace any instances of vscode.window.createQuickPick() with this method.
-   *
-   * Note: the value returned should use STUBS.showQuickPick(quickPick) instead of quickPick.show();
-   *
-   * @returns bloop
-   */
-  createQuickPick: <T extends vscode.QuickPickItem> () => vscode.QuickPick<T>;
-
   /**
    * Stubbable command to show a quick pick controllable in tests.
    * Replace any instances of quickPick.show() with this method.
@@ -29,20 +18,9 @@ interface VSCodeStubs {
    * @returns
    */
   showQuickPick: <T extends vscode.QuickPickItem> (quickPick: vscode.QuickPick<T>) => Thenable<void>;
-
-  /**
-   * Stubbable command to get the workspace configuration
-   * Replace any instances of vscode.workspace.getConfiguration() with this method.
-   *
-   * @param inpupt
-   * @returns
-   */
-  vscodeWorkspaceGetConfiguration: (inpupt: GetConfigurationProps) => vscode.WorkspaceConfiguration;
 }
 
 // VSCODE_STUBS is the object that contains all stubbable VS Code methods.
 export const VSCODE_STUBS: VSCodeStubs = {
-  createQuickPick: createQuickPick,
   showQuickPick: showQuickPick(),
-  vscodeWorkspaceGetConfiguration: vscodeWorkspaceGetConfiguration(),
 };
