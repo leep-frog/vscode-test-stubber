@@ -14,18 +14,36 @@ export const TEST_MODE: boolean = !!STUBBABLE_TEST_FILE_PATH;
 
 // StubbablesConfig is the VS Code configuration defined on a per-test basis.
 export interface StubbablesConfig {
-  // The set of quick pick Actions.
+  /**
+   * The set of quick pick Actions.
+   */
   quickPickActions?: QuickPickAction[];
 
-  // The expected set of quick pick executions to have run during the test
+  /**
+   * The expected set of quick pick executions to have run during the test
+   */
   expectedQuickPickExecutions?: (vscode.QuickPickItem | string)[][];
 
-  // The vscode.WorkspaceConfiguration that is configured at the start of the test (this can be modified during test execution).
+  /**
+   * The vscode.WorkspaceConfiguration that is configured at the start of the test (this can be modified during test execution).
+   */
   workspaceConfiguration?: WorkspaceConfiguration;
 
-  // The expected vscode.WorkspaceConfiguration at the end of the test. If unset, then the test will verify that
-  // the configuration was unchanged.
+  /**
+   * The expected vscode.WorkspaceConfiguration at the end of the test. If unset, then the test will verify that
+   * the configuration was unchanged.
+   */
   expectedWorkspaceConfiguration?: WorkspaceConfiguration;
+
+  /**
+   * The expected set of info messages to be displayed
+   */
+  expectedInfoMessages?: string[];
+
+  /**
+   * The expected set of error messages to be displayed
+   */
+  expectedErrorMessages?: string[];
 }
 
 // StubbablesConfigInternal is an internal model used for storing additional fields required for testing.

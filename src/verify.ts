@@ -4,6 +4,17 @@ import { jsonIgnoreReplacer } from "json-ignore";
 import * as vscode from 'vscode';
 import { StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
+// Set of data to store during tests
+interface TestData {
+  infoMessages: string[];
+  errorMessages: string[];
+}
+
+const testData: TestData = {
+  infoMessages: [],
+  errorMessages: [],
+};
+
 /**
  * Setup the stubs for use in the test.
  *
@@ -20,6 +31,22 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   }
 
   writeFileSync(stubbableTestFile, JSON.stringify(internalCfg || {}, jsonIgnoreReplacer));
+
+  // Stub out message functions
+  testData.infoMessages = [];
+  testData.errorMessages = [];
+
+  // TODO: try/finally to ensure these are reset (is this really needed though?)
+  const originalShowInfo = vscode.window.showInformationMessage;
+  vscode.window.showInformationMessage = async (s: string) => {
+    testData.infoMessages.push(s);
+    originalShowInfo(s);
+  };
+  const originalShowError = vscode.window.showErrorMessage;
+  vscode.window.showErrorMessage = async (s: string) => {
+    testData.errorMessages.push(s);
+    originalShowError(s);
+  };
 }
 
 
@@ -47,6 +74,9 @@ export function testVerify(stubbableTestFile: string) {
 
   // Verify workspace configuration
   assert.deepStrictEqual(finalConfig.workspaceConfiguration || {}, finalConfig.expectedWorkspaceConfiguration || {});
+
+  assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
+  assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
 }
 
 function classless(obj: any) {
