@@ -1,6 +1,7 @@
 import assert from "assert";
 import vscode from "vscode";
-import { FakeWorkspaceConfiguration, WorkspaceConfiguration } from "..";
+import { FakeWorkspaceConfiguration } from "..";
+import { WorkspaceConfiguration } from "../workspace-configuration";
 
 suite("Error tests", () => {
 

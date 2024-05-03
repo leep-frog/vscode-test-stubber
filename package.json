@@ -1,6 +1,6 @@
 {
   "name": "@leep-frog/vscode-test-stubber",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "displayName": "vscode-test-stubber",
   "description": "",
   "engines": {
@@ -36,6 +36,7 @@
     "test": "vscode-test --coverage --coverageReporter lcov --coverageReporter html",
     "test-compile": "tsc -p ./",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "prepublish": "npm run test",
     "watch": "tsc -watch -p ./"
   },
   "publishConfig": {
