@@ -27,11 +27,11 @@ interface VSCodeStubs {
    * @param inpupt
    * @returns
    */
-  vscodeWorkspaceGetConfiguration: (inpupt: GetConfigurationProps) => vscode.WorkspaceConfiguration;
+  getConfiguration: (inpupt: GetConfigurationProps) => vscode.WorkspaceConfiguration;
 }
 
 // VSCODE_STUBS is the object that contains all stubbable VS Code methods.
 export const VSCODE_STUBS: VSCodeStubs = {
   showQuickPick: showQuickPick(),
-  vscodeWorkspaceGetConfiguration: vscodeWorkspaceGetConfiguration(),
+  getConfiguration: vscodeWorkspaceGetConfiguration(),
 };
