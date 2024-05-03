@@ -49,7 +49,9 @@ export const stubbables = {
       }
 
       if (props.section) {
-        // return stubWorkspaceConfiguration.cfg!.scopedSection
+        // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
+        // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
+        return stubWorkspaceConfiguration.cfg!.scopedConfiguration(props.section.split("."));
       }
 
       return stubWorkspaceConfiguration.cfg!;
@@ -492,7 +494,7 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
     });
   }
 
-  inspect<T>(section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
+  inspect<T>(_section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
     throw new Error(`FakeWorkspaceConfiguration.inspect is not yet supported`);
   }
 
@@ -506,7 +508,7 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
     if (!this.configurations.has(configurationTarget)) {
       this.configurations.set(configurationTarget, new Map<string, any>());
     }
-    this.configurations.get(configurationTarget)!.set(section, value);
+    nestedSet(this.configurations.get(configurationTarget)!, section, value);
     return;
   }
 
@@ -587,7 +589,12 @@ export function nestedGet(map: Map<string, any>, keys: string[]): any {
   return nestedDo(map, keys, (v: any) => v, () => undefined);
 }
 
-function nestedDo<T>(map: Map<string, any>, keys: string[], hasFn: (v: any) => T, missingFn: () => T): T {
+export function nestedSet(map: Map<string, any>, path: string, value:any) {
+  const pathParts = path.split(".");
+  nestedDo(map, pathParts.slice(0, -1), (m: Map<string, any>) => m.set(pathParts.at(-1)!, value), () => { throw new Error(""); }, true);
+}
+
+function nestedDo<T>(map: Map<string, any>, keys: string[], hasFn: (v: any) => T, missingFn: () => T, insert?: boolean): T {
 
   let cur: any = map;
   for (let i = 0; i < keys.length; i++) {
@@ -597,7 +604,11 @@ function nestedDo<T>(map: Map<string, any>, keys: string[], hasFn: (v: any) => T
 
     const key = keys.at(i)!;
     if (!cur.has(key)) {
-      return missingFn();
+      if (insert) {
+        cur.set(key, new Map<string, any>());
+      } else {
+        return missingFn();
+      }
     }
 
     cur = cur.get(key);
