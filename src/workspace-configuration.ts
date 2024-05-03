@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { StubbablesConfig } from '.';
 import { nestedGet, nestedHas, nestedSet } from './nested';
 
 export const CONFIGURATION_TARGET_ORDER = [
@@ -13,8 +14,10 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
 
   // Map from scope, to subsection, to value
   readonly configurations: WorkspaceConfiguration;
+  readonly sc: StubbablesConfig;
 
-  constructor(startingConfiguration?: WorkspaceConfiguration) {
+  constructor(sc: StubbablesConfig, startingConfiguration?: WorkspaceConfiguration) {
+    this.sc = sc;
     this.configurations = startingConfiguration || new Map<vscode.ConfigurationTarget, Map<string, any>>();
   }
 
@@ -56,6 +59,7 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
       this.configurations.set(configurationTarget, new Map<string, any>());
     }
     nestedSet(this.configurations.get(configurationTarget)!, section, value);
+    this.sc.changed = true;
   }
 
   // This logic was determined by the definition of the configurationTarget argument in the `update` method's javadoc
@@ -103,7 +107,6 @@ class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration 
     ].join(".");
   }
 
-  // TODO: nested get with dot notation (e.g. faves.favorite)
   get<T>(section: string, defaultValue?: T): T | undefined {
     return this.globalConfiguration.get(this.nestedSection(section), defaultValue);
   }

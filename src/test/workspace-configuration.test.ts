@@ -6,7 +6,7 @@ import { WorkspaceConfiguration } from "../workspace-configuration";
 suite("Error tests", () => {
 
   test("inspect throws an error", () => {
-    const cfg = new FakeWorkspaceConfiguration();
+    const cfg = new FakeWorkspaceConfiguration({});
     assert.throws(() => cfg.inspect("section"), new Error("FakeWorkspaceConfiguration.inspect is not yet supported"));
 
     const scopedCfg = cfg.scopedConfiguration([]);
@@ -14,7 +14,7 @@ suite("Error tests", () => {
   });
 
   test("update throws an error", async () => {
-    const cfg = new FakeWorkspaceConfiguration();
+    const cfg = new FakeWorkspaceConfiguration({});
     assert.rejects(() => cfg.update("section", "value", true, true), new Error("overrideInLanguage is not yet supported"));
 
     const scopedCfg = cfg.scopedConfiguration([]);
@@ -295,11 +295,11 @@ const testCases: TestCase[] = [
 suite('FakeWorkspaceConfiguration tests', () => {
   testCases.forEach(tc => {
     test(tc.name, async () => {
-      const globalCfg = new FakeWorkspaceConfiguration(tc.startingCfg);
+      const globalCfg = new FakeWorkspaceConfiguration({}, tc.startingCfg);
       const cfg = (tc.scopedSection === undefined) ? globalCfg : globalCfg.scopedConfiguration(tc.scopedSection.split("."));
       await cfg.update(tc.section, tc.value, tc.unqualifiedConfigurationTarget);
 
-      const want = new FakeWorkspaceConfiguration(tc.want);
+      const want = new FakeWorkspaceConfiguration({changed: true}, tc.want);
       assert.deepStrictEqual(globalCfg, want);
     });
   });

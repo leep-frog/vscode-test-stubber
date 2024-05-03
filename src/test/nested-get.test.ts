@@ -167,7 +167,7 @@ suite('nestedGet tests', () => {
       const section = tc.keys.join(".");
       for (const target of CONFIGURATION_TARGET_ORDER) {
         // Workspace configuration tests
-        const cfg = new FakeWorkspaceConfiguration(new Map<vscode.ConfigurationTarget, Map<string, any>>([
+        const cfg = new FakeWorkspaceConfiguration({}, new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [target, tc.map],
         ]));
 

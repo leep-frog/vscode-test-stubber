@@ -5,7 +5,7 @@ import { FakeWorkspaceConfiguration, WorkspaceConfiguration, stubWorkspaceConfig
 
 export { FakeWorkspaceConfiguration } from './workspace-configuration';
 
-const stubbableTestFilePath = process.env.VSCODE_STUBBABLE_TEST_FILE;
+const STUBBABLE_TEST_FILE_PATH = process.env.VSCODE_STUBBABLE_TEST_FILE;
 
 export interface StubbablesConfig {
   // If a value is undefined, then return undefined.
@@ -18,9 +18,7 @@ export interface StubbablesConfig {
   resultingWorkspaceConfiguration?: WorkspaceConfiguration;
 }
 
-// TODO: init method and use starting workspace configuration
-
-export const TEST_MODE: boolean = !!stubbableTestFilePath;
+export const TEST_MODE: boolean = !!STUBBABLE_TEST_FILE_PATH;
 
 export interface GetConfigurationProps {
   section?: string;
@@ -46,7 +44,7 @@ export const stubbables = {
       }
 
       if (!stubWorkspaceConfiguration.cfg) {
-        stubWorkspaceConfiguration.cfg = new FakeWorkspaceConfiguration(sc.startingWorkspaceConfiguration);
+        stubWorkspaceConfiguration.cfg = new FakeWorkspaceConfiguration(sc, sc.startingWorkspaceConfiguration);
       }
 
       if (props.section) {
@@ -112,13 +110,13 @@ function runStubbableMethodNoInput<O>(nonTestLogic: () => O, testLogic: (config:
 
 function runStubbableMethod<I, O>(nonTestLogic: (input: I) => O, testLogic: (input: I, config: StubbablesConfig) => O): (input: I) => O {
   return (input: I) => {
-    if (!stubbableTestFilePath) {
+    if (!STUBBABLE_TEST_FILE_PATH) {
       return nonTestLogic(input);
     }
 
     let stubbableConfig: StubbablesConfig;
     try {
-      stubbableConfig = JSON.parse(readFileSync(stubbableTestFilePath).toString());
+      stubbableConfig = JSON.parse(readFileSync(STUBBABLE_TEST_FILE_PATH).toString());
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to read/parse stubbables test file: ${e}`);
       return nonTestLogic(input);
@@ -130,7 +128,7 @@ function runStubbableMethod<I, O>(nonTestLogic: (input: I) => O, testLogic: (inp
     try {
       if (stubbableConfig.changed) {
         // jsonIgnoreReplacer ensures that relevant @jsonIgnore() annotated fields aren't included
-        writeFileSync(stubbableTestFilePath, JSON.stringify(stubbableConfig, jsonIgnoreReplacer));
+        writeFileSync(STUBBABLE_TEST_FILE_PATH, JSON.stringify(stubbableConfig, jsonIgnoreReplacer));
       }
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to write stubbables config back test file: ${e}`);
