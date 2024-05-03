@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { CONFIGURATION_TARGET_ORDER, FakeWorkspaceConfiguration, nestedGet, nestedHas } from "..";
+import { CONFIGURATION_TARGET_ORDER, FakeWorkspaceConfiguration } from "..";
+import { nestedGet, nestedHas } from "../nested";
 
 interface TestCase {
   name: string;
