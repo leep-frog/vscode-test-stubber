@@ -121,7 +121,7 @@ export class SimpleTestCase implements TestCase {
     } else {
       const activeEditor = assertDefined(maybeActiveEditor, "activeTextEditor");
       assert.deepStrictEqual(activeEditor.document.getText(), this.props.expectedText.join("\n"), "Expected DOCUMENT TEXT to be exactly equal");
-      assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections!, "Expected SELECTIONS to be exactly equal");
+      assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections || [new vscode.Selection(0, 0, 0, 0)], "Expected SELECTIONS to be exactly equal");
     }
   }
 }
