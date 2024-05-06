@@ -2,6 +2,7 @@ import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
 import { jsonIgnoreReplacer } from "json-ignore";
 import * as vscode from 'vscode';
+import { inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
@@ -61,6 +62,8 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   testData.errorMessages = [];
 
   oneTimeSetup();
+
+  inputBoxSetup(internalCfg);
 }
 
 
@@ -91,6 +94,8 @@ export function testVerify(stubbableTestFile: string) {
 
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
+
+  verifyInputBox(finalConfig);
 }
 
 // Remove class info so deepStrictEqual works on any type

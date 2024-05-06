@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { jsonIgnoreReplacer } from 'json-ignore';
 import * as vscode from 'vscode';
+import { InputBoxExecution } from './input-box';
 import { QuickPickAction } from "./quick-pick";
 import { WorkspaceConfiguration } from './workspace-configuration';
 
@@ -20,7 +21,7 @@ export interface StubbablesConfig {
   quickPickActions?: QuickPickAction[];
 
   /**
-   * The expected set of quick pick executions to have run during the test
+   * The expected set of quick pick executions to have run during the test.
    */
   expectedQuickPickExecutions?: (vscode.QuickPickItem | string)[][];
 
@@ -36,14 +37,24 @@ export interface StubbablesConfig {
   expectedWorkspaceConfiguration?: WorkspaceConfiguration;
 
   /**
-   * The expected set of info messages to be displayed
+   * The expected set of info messages to be displayed.
    */
   expectedInfoMessages?: string[];
 
   /**
-   * The expected set of error messages to be displayed
+   * The expected set of error messages to be displayed.
    */
   expectedErrorMessages?: string[];
+
+  /**
+   * The input box responses to return.
+   */
+  inputBoxResponse?: string[];
+
+  /**
+   * The expected input box executions.
+   */
+  expectedInputBoxes?: InputBoxExecution[];
 }
 
 // StubbablesConfigInternal is an internal model used for storing additional fields required for testing.
@@ -56,6 +67,9 @@ export interface StubbablesConfigInternal extends StubbablesConfig {
 
   // Whether or not the config has changed
   changed?: boolean;
+
+  // The input box executions made during the test
+  gotInputBoxes?: InputBoxExecution[];
 }
 
 export function runStubbableMethodNoInput<O>(nonTestLogic: () => O, testLogic: (config: StubbablesConfigInternal) => O): () => O {
