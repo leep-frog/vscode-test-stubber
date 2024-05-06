@@ -32,6 +32,10 @@ export function inputBoxSetup(sc: StubbablesConfigInternal) {
 
     const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
 
+    if (!sc.gotInputBoxes) {
+      sc.gotInputBoxes = [];
+    }
+
     sc.gotInputBoxes?.push({
       options,
       token,
