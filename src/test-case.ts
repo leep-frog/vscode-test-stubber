@@ -56,6 +56,12 @@ export interface SimpleTestCaseProps {
   selections?: vscode.Selection[];
   expectedSelections?: vscode.Selection[];
 
+  /**
+   * expectedText is the expected text that is present in the active text editor.
+   * If undefined, then the test asserts that there is no active editor.
+   *
+   * TODO: Make this string[] | string
+   */
   expectedText?: string[];
 };
 
@@ -107,12 +113,15 @@ export class SimpleTestCase implements TestCase {
     // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
     testVerify(stubbableTestFile);
 
-    if (editor) {
-      assert.deepStrictEqual(editor.document.getText(), this.props.expectedText!.join("\n"), "Expected DOCUMENT TEXT to be exactly equal");
-      assert.deepStrictEqual(editor.selections, this.props.expectedSelections!, "Expected SELECTIONS to be exactly equal");
-    } else {
-      assertUndefined(this.props.expectedText, "expectedText");
+    const maybeActiveEditor = vscode.window.activeTextEditor;
+
+    if (this.props.expectedText === undefined) {
+      assertUndefined(maybeActiveEditor, "activeTextEditor");
       assertUndefined(this.props.expectedSelections, "expectedSelections");
+    } else {
+      const activeEditor = assertDefined(maybeActiveEditor, "activeTextEditor");
+      assert.deepStrictEqual(activeEditor.document.getText(), this.props.expectedText.join("\n"), "Expected DOCUMENT TEXT to be exactly equal");
+      assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections!, "Expected SELECTIONS to be exactly equal");
     }
   }
 }
