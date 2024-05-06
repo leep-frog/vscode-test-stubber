@@ -1,6 +1,7 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
-import { StubbablesConfig } from "../dist";
+
+import { StubbablesConfig } from './run-stubbable';
 import { testSetup, testVerify } from './verify';
 
 export interface UserInteraction {
