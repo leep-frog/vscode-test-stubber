@@ -67,7 +67,7 @@ export class SimpleTestCase implements TestCase {
     this.props = props;
   }
 
-  async runTest(stubbableTestFile: string, sc: StubbablesConfig): Promise<void> {
+  async runTest(stubbableTestFile: string, sc?: StubbablesConfig): Promise<void> {
     await closeAllEditors.do();
 
     let editor: vscode.TextEditor | undefined;
