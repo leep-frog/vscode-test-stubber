@@ -23,12 +23,12 @@ export interface InputBoxExecution {
 export function inputBoxSetup(sc: StubbablesConfigInternal) {
   vscode.window.showInputBox = async (options?: vscode.InputBoxOptions, token?: vscode.CancellationToken) => {
     sc.changed = true;
-    if (!sc.inputBoxResponse) {
+    if (!sc.inputBoxResponses) {
       sc.error = "Ran out of inputBoxResponses";
       return undefined;
     }
 
-    const response = sc.inputBoxResponse!.shift()!;
+    const response = sc.inputBoxResponses!.shift()!;
 
     const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
 

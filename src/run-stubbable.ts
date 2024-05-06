@@ -49,7 +49,7 @@ export interface StubbablesConfig {
   /**
    * The input box responses to return.
    */
-  inputBoxResponse?: string[];
+  inputBoxResponses?: (string | undefined)[];
 
   /**
    * The expected input box executions.
