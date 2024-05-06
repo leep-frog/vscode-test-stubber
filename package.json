@@ -1,6 +1,6 @@
 {
   "name": "@leep-frog/vscode-test-stubber",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "displayName": "vscode-test-stubber",
   "description": "",
   "engines": {

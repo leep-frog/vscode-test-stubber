@@ -93,6 +93,7 @@ export function testVerify(stubbableTestFile: string) {
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
 }
 
+// Remove class info so deepStrictEqual works on any type
 function classless(obj: any) {
   return JSON.parse(JSON.stringify(obj, jsonIgnoreReplacer));
 }
