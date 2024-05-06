@@ -108,8 +108,8 @@ export class SimpleTestCase implements TestCase {
     testVerify(stubbableTestFile);
 
     if (editor) {
-      assert.deepStrictEqual(editor.document.getText(), this.props.expectedText?.join("\n"), "Expected DOCUMENT TEXT to be exactly equal");
-      assert.deepStrictEqual(editor.selections, this.props.expectedSelections || [new vscode.Selection(0, 0, 0, 0)], "Expected SELECTIONS to be exactly equal");
+      assert.deepStrictEqual(editor.document.getText(), this.props.expectedText!.join("\n"), "Expected DOCUMENT TEXT to be exactly equal");
+      assert.deepStrictEqual(editor.selections, this.props.expectedSelections!, "Expected SELECTIONS to be exactly equal");
     } else {
       assertUndefined(this.props.expectedText, "expectedText");
       assertUndefined(this.props.expectedSelections, "expectedSelections");
