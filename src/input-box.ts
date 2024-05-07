@@ -33,17 +33,24 @@ export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
 
     const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
 
-    const exOptions: InputBoxExecutionOptions | undefined = options ? {
-      ...options,
-      validateInputProvided: !!(options?.validateInput),
-    } : undefined;
-
     td.inputBoxes.push({
-      options: exOptions,
+      options: createExecutionOptions(options),
       validationMessage: validationMessage === null ? undefined : validationMessage,
     });
 
     return validationMessage ? undefined : response;
+  };
+}
+
+function createExecutionOptions(options?: vscode.InputBoxOptions): InputBoxExecutionOptions | undefined {
+  if (!options) {
+    return;
+  }
+
+  const {validateInput, ...relevantOptions} = options;
+  return {
+    ...relevantOptions,
+    validateInputProvided: validateInput !== undefined,
   };
 }
 
