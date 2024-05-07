@@ -3,16 +3,18 @@ import * as vscode from 'vscode';
 import { StubbablesConfigInternal } from './run-stubbable';
 import { TestData } from './verify';
 
+export interface InputBoxExecutionOptions extends Omit<vscode.InputBoxOptions, "validateInput">{
+  /**
+   * Whether or not the validateInput method was provided
+   */
+  validateInputProvided?: boolean;
+}
+
 export interface InputBoxExecution {
   /**
    * The options passed to the input box creation method.
    */
-  options?: vscode.InputBoxOptions;
-
-  /**
-   * The token passed to the input box creation method.
-   */
-  token?: vscode.CancellationToken;
+  options?: InputBoxExecutionOptions;
 
   /**
    * The validation message produced by the input box.
@@ -32,8 +34,10 @@ export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
     const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
 
     td.inputBoxes.push({
-      options,
-      token,
+      options: options ? {
+        ...options,
+        validateInputProvided: !!(options?.validateInput),
+      } : undefined,
       validationMessage: validationMessage === null ? undefined : validationMessage,
     });
 
