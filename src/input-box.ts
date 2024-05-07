@@ -33,11 +33,13 @@ export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
 
     const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
 
+    const exOptions: InputBoxExecutionOptions | undefined = options ? {
+      ...options,
+      validateInputProvided: !!(options?.validateInput),
+    } : undefined;
+
     td.inputBoxes.push({
-      options: options ? {
-        ...options,
-        validateInputProvided: !!(options?.validateInput),
-      } : undefined,
+      options: exOptions,
       validationMessage: validationMessage === null ? undefined : validationMessage,
     });
 
