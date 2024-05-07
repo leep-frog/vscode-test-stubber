@@ -2,19 +2,30 @@ import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
 import { jsonIgnoreReplacer } from "json-ignore";
 import * as vscode from 'vscode';
-import { inputBoxSetup, verifyInputBox } from "./input-box";
+import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
 // Set of data to store during tests
-interface TestData {
+export interface TestData {
   infoMessages: string[];
   errorMessages: string[];
+
+  /**
+   * The input box executions made during the test
+   */
+  inputBoxes: InputBoxExecution[];
+
+  /**
+   * If any stub-related error occurred during the test.
+   */
+  error?: string;
 }
 
 const testData: TestData = {
   infoMessages: [],
   errorMessages: [],
+  inputBoxes: [],
 };
 
 let didOneTime = false;
@@ -60,10 +71,11 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   // Stub out message functions
   testData.infoMessages = [];
   testData.errorMessages = [];
+  testData.inputBoxes = [];
 
   oneTimeSetup();
 
-  inputBoxSetup(internalCfg);
+  inputBoxSetup(internalCfg, testData);
 }
 
 
@@ -71,6 +83,7 @@ export function testVerify(stubbableTestFile: string) {
   // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
   const finalConfig: StubbablesConfigInternal = JSON.parse(readFileSync(stubbableTestFile).toString(), jsonIgnoreReplacer);
   assertUndefined(finalConfig.error, "StubbablesConfig.error");
+  assertUndefined(testData.error, "TestData.error");
 
   // Verify quick pick interactions
   assert.deepStrictEqual(finalConfig.quickPickActions ?? [], [], "Unused QUICK PICK ACTIONS to be empty");
@@ -95,7 +108,7 @@ export function testVerify(stubbableTestFile: string) {
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
 
-  verifyInputBox(finalConfig);
+  verifyInputBox(finalConfig, testData);
 }
 
 // Remove class info so deepStrictEqual works on any type

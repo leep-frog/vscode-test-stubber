@@ -1,7 +1,7 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
 import { StubbablesConfigInternal } from './run-stubbable';
-// TODO: Stub show input box and then use SimpleTestCase in groog extension
+import { TestData } from './verify';
 
 export interface InputBoxExecution {
   /**
@@ -20,11 +20,10 @@ export interface InputBoxExecution {
   validationMessage?: (string | vscode.InputBoxValidationMessage);
 }
 
-export function inputBoxSetup(sc: StubbablesConfigInternal) {
+export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
   vscode.window.showInputBox = async (options?: vscode.InputBoxOptions, token?: vscode.CancellationToken) => {
-    sc.changed = true;
     if (!sc.inputBoxResponses) {
-      sc.error = "Ran out of inputBoxResponses";
+      td.error = "Ran out of inputBoxResponses";
       return undefined;
     }
 
@@ -32,11 +31,7 @@ export function inputBoxSetup(sc: StubbablesConfigInternal) {
 
     const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
 
-    if (!sc.gotInputBoxes) {
-      sc.gotInputBoxes = [];
-    }
-
-    sc.gotInputBoxes?.push({
+    td.inputBoxes.push({
       options,
       token,
       validationMessage: validationMessage === null ? undefined : validationMessage,
@@ -46,6 +41,6 @@ export function inputBoxSetup(sc: StubbablesConfigInternal) {
   };
 }
 
-export function verifyInputBox(sc: StubbablesConfigInternal) {
-  assert.deepStrictEqual(sc.gotInputBoxes || [], sc.expectedInputBoxes || [], "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal");
+export function verifyInputBox(sc: StubbablesConfigInternal, td: TestData) {
+  assert.deepStrictEqual(td.inputBoxes, sc.expectedInputBoxes || [], "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal");
 }

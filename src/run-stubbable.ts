@@ -58,6 +58,8 @@ export interface StubbablesConfig {
 }
 
 // StubbablesConfigInternal is an internal model used for storing additional fields required for testing.
+// IMPORTANT NOTE: Only fields for stubbed methods should be added here
+// Everything else should be added to verify.testData.
 export interface StubbablesConfigInternal extends StubbablesConfig {
   // The quick picks that were generated.
   gotQuickPickOptions?: vscode.QuickPickItem[][];
@@ -67,9 +69,6 @@ export interface StubbablesConfigInternal extends StubbablesConfig {
 
   // Whether or not the config has changed
   changed?: boolean;
-
-  // The input box executions made during the test
-  gotInputBoxes?: InputBoxExecution[];
 }
 
 export function runStubbableMethodNoInput<O>(nonTestLogic: () => O, testLogic: (config: StubbablesConfigInternal) => O): () => O {
