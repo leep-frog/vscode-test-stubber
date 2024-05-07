@@ -35,7 +35,7 @@ export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
 
     td.inputBoxes.push(createExecution(validationMessage, options));
 
-    return response;
+    return validationMessage ? undefined : response;
   };
 }
 
