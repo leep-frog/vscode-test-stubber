@@ -24,7 +24,7 @@ export interface InputBoxExecution {
 
 export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
   vscode.window.showInputBox = async (options?: vscode.InputBoxOptions, token?: vscode.CancellationToken) => {
-    if (!sc.inputBoxResponses) {
+    if (!sc.inputBoxResponses || sc.inputBoxResponses.length === 0) {
       td.error = "Ran out of inputBoxResponses";
       return undefined;
     }
@@ -68,4 +68,5 @@ function createExecutionOptions(options?: vscode.InputBoxOptions): InputBoxExecu
 
 export function verifyInputBox(sc: StubbablesConfigInternal, td: TestData) {
   assert.deepStrictEqual(td.inputBoxes, sc.expectedInputBoxes || [], "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal");
+  assert.deepStrictEqual((sc.inputBoxResponses || []).slice(td.inputBoxes.length), [], "Unused inputBoxResponses");
 }
