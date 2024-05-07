@@ -33,12 +33,24 @@ export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
 
     const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
 
-    td.inputBoxes.push({
-      options: createExecutionOptions(options),
-      validationMessage: validationMessage === null ? undefined : validationMessage,
-    });
+    td.inputBoxes.push(createExecution(validationMessage, options));
 
-    return validationMessage ? undefined : response;
+    return response;
+  };
+}
+
+function createExecution(validationMessage?: string | vscode.InputBoxValidationMessage | null, options?: vscode.InputBoxOptions): InputBoxExecution {
+  const exOpts = createExecutionOptions(options);
+
+  // This weirdness is needed, otherwise assert.deepStrictEqual returns an error when undefined
+  if (validationMessage === undefined || validationMessage === null) {
+    return {
+      options: exOpts,
+    };
+  }
+  return {
+    options: exOpts,
+    validationMessage: validationMessage,
   };
 }
 
