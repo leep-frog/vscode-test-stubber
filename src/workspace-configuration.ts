@@ -11,9 +11,16 @@ export function vscodeWorkspaceGetConfiguration(): (section?: string, scope?: vs
   return runStubbableMethodTwoArgs<string | undefined, vscode.ConfigurationScope | undefined, vscode.WorkspaceConfiguration>(
     vscode.workspace.getConfiguration,
     (section: string | undefined, scope: vscode.ConfigurationScope | undefined, sc: StubbablesConfigInternal) => {
+
+
       if (scope) {
-        sc.error = "ConfigurationScope is not yet supported";
-        throw new Error("ConfigurationScope is not yet supported");
+        const languageScope = scope as { languageId: string };
+        if (languageScope.languageId) {
+          section = `[${languageScope.languageId}].${section}`;
+        } else {
+          sc.error = "ConfigurationScope is not yet supported";
+          throw new Error("ConfigurationScope is not yet supported");
+        }
       }
 
       if (!stubWorkspaceConfiguration.cfg) {
