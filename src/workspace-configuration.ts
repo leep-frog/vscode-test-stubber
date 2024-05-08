@@ -2,40 +2,38 @@ import * as vscode from 'vscode';
 import { nestedGet, nestedHas, nestedSet } from './nested';
 import { StubbablesConfigInternal, runStubbableMethodTwoArgs } from './run-stubbable';
 
-export interface GetConfigurationProps {
-  section?: string;
-  scope?: vscode.ConfigurationScope;
-};
-
 export function vscodeWorkspaceGetConfiguration(): (section?: string, scope?: vscode.ConfigurationScope) => vscode.WorkspaceConfiguration {
   return runStubbableMethodTwoArgs<string | undefined, vscode.ConfigurationScope | undefined, vscode.WorkspaceConfiguration>(
     vscode.workspace.getConfiguration,
     (section: string | undefined, scope: vscode.ConfigurationScope | undefined, sc: StubbablesConfigInternal) => {
 
-
-      if (scope) {
-        const languageScope = scope as { languageId: string };
-        if (languageScope.languageId) {
-          section = `[${languageScope.languageId}].${section}`;
-        } else {
-          sc.error = "ConfigurationScope is not yet supported";
-          throw new Error("ConfigurationScope is not yet supported");
-        }
-      }
+      const languageId = getLanguageId(scope, sc);
 
       if (!stubWorkspaceConfiguration.cfg) {
-        stubWorkspaceConfiguration.cfg = new FakeWorkspaceConfiguration(sc, sc.workspaceConfiguration);
+        stubWorkspaceConfiguration.cfg = new FakeWorkspaceConfiguration(sc.workspaceConfiguration);
       }
 
-      if (section) {
-        // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
-        // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
-        return stubWorkspaceConfiguration.cfg!.scopedConfiguration(section.split("."));
-      }
+      const sectionParts = section === undefined ? [] : section.split(".");
 
-      return stubWorkspaceConfiguration.cfg!;
+      // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
+      // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
+      return stubWorkspaceConfiguration.cfg!.scopedConfiguration(sc, sectionParts, languageId);
     },
   );
+}
+
+function getLanguageId(scope: vscode.ConfigurationScope | undefined, sc: StubbablesConfigInternal): string | undefined {
+  if (!scope) {
+    return;
+  }
+
+  const languageScope = scope as { languageId: string };
+  if (languageScope.languageId) {
+    return languageScope.languageId;
+  }
+
+  sc.error = "Only languageId is supported for ConfigurationScope";
+  throw new Error("Only languageId is supported for ConfigurationScope");
 }
 
 export const CONFIGURATION_TARGET_ORDER = [
@@ -44,27 +42,56 @@ export const CONFIGURATION_TARGET_ORDER = [
   vscode.ConfigurationTarget.Global,
 ];
 
-export type WorkspaceConfiguration = Map<vscode.ConfigurationTarget, Map<string, any>>;
+export interface WorkspaceConfiguration {
+  configuration?: Map<vscode.ConfigurationTarget, Map<string, any>>;
+  languageConfiguration?: Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>;
+}
 
-export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
+export class FakeWorkspaceConfiguration {
 
   // Map from scope, to subsection, to value
-  readonly configurations: WorkspaceConfiguration;
-  readonly sc: StubbablesConfigInternal;
+  readonly configuration: Map<vscode.ConfigurationTarget, Map<string, any>>;
+  readonly languageConfiguration: Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>;
 
-  constructor(sc: StubbablesConfigInternal, startingConfiguration?: WorkspaceConfiguration) {
-    this.sc = sc;
-    this.configurations = startingConfiguration || new Map<vscode.ConfigurationTarget, Map<string, any>>();
+  constructor(startingConfiguration?: WorkspaceConfiguration) {
+    this.configuration = startingConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>();
+    this.languageConfiguration = startingConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>();
   }
 
-  scopedConfiguration(sections: string[]) {
-    return new FakeScopedWorkspaceConfiguration(this, sections);
+  scopedConfiguration(sc: StubbablesConfigInternal, sections?: string[], languageId?: string) {
+    return new FakeScopedWorkspaceConfiguration(sc, this, sections || [], languageId);
+  }
+}
+
+class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
+
+  readonly sc: StubbablesConfigInternal;
+  readonly globalConfiguration: FakeWorkspaceConfiguration;
+  readonly sections: string[];
+  readonly languageId?: string;
+
+  constructor(sc: StubbablesConfigInternal, globalConfiguration: FakeWorkspaceConfiguration, sections: string[], languageId?: string) {
+    this.sc = sc;
+    this.globalConfiguration = globalConfiguration;
+    this.sections = sections;
+    this.languageId = languageId;
+  }
+
+  private currentConfiguration(must?: boolean): Map<vscode.ConfigurationTarget, Map<string, any>> | undefined {
+    if (this.languageId === undefined) {
+      return this.globalConfiguration.configuration;
+    }
+
+    if (must && !this.globalConfiguration.languageConfiguration.has(this.languageId)) {
+      this.globalConfiguration.languageConfiguration.set(this.languageId, new Map<vscode.ConfigurationTarget, Map<string, any>>());
+    }
+    return this.globalConfiguration.languageConfiguration.get(this.languageId);
   }
 
   get<T>(section: string, defaultValue?: T): T | undefined {
-    const sectionParts = section.split(".");
+    const sectionParts = [...this.sections, ...section.split(".")];
     for (const configurationTarget of CONFIGURATION_TARGET_ORDER) {
-      const targetMap = this.configurations.get(configurationTarget);
+      const targetMap = this.currentConfiguration()?.get(configurationTarget);
       if (targetMap && nestedHas(targetMap, sectionParts)) {
         return nestedGet(targetMap, sectionParts)!;
       }
@@ -73,15 +100,15 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
   }
 
   has(section: string): boolean {
-    const sectionParts = section.split(".");
+    const sectionParts = [...this.sections, ...section.split(".")];
     return CONFIGURATION_TARGET_ORDER.some(configurationTarget => {
-      const targetMap = this.configurations.get(configurationTarget);
+      const targetMap = this.currentConfiguration()?.get(configurationTarget);
       return !!(targetMap && nestedHas(targetMap, sectionParts));
     });
   }
 
   inspect<T>(_section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
-    throw new Error(`FakeWorkspaceConfiguration.inspect is not yet supported`);
+    throw new Error(`FakeScopedWorkspaceConfiguration.inspect is not yet supported`);
   }
 
   async update(section: string, value: any, unqualifiedConfigurationTarget?: boolean | vscode.ConfigurationTarget | null | undefined, overrideInLanguage?: boolean | undefined): Promise<void> {
@@ -91,10 +118,11 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
       throw new Error(`overrideInLanguage is not yet supported`);
     }
 
-    if (!this.configurations.has(configurationTarget)) {
-      this.configurations.set(configurationTarget, new Map<string, any>());
+    const currentCfg = this.currentConfiguration(true)!;
+    if (!currentCfg.has(configurationTarget)) {
+      currentCfg.set(configurationTarget, new Map<string, any>());
     }
-    nestedSet(this.configurations.get(configurationTarget)!, section, value);
+    nestedSet(currentCfg.get(configurationTarget)!, [...this.sections, section].join("."), value);
     this.sc.changed = true;
   }
 
@@ -122,41 +150,6 @@ export class FakeWorkspaceConfiguration implements vscode.WorkspaceConfiguration
     }
 
     return vscode.ConfigurationTarget.WorkspaceFolder;
-  }
-}
-
-class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
-
-  // Map from scope, to subsection, to value
-  readonly globalConfiguration: FakeWorkspaceConfiguration;
-  readonly sections: string[];
-
-  constructor(globalConfiguration: FakeWorkspaceConfiguration, sections: string[]) {
-    this.globalConfiguration = globalConfiguration;
-    this.sections = sections;
-  }
-
-  nestedSection(section: string): string {
-    return [
-      ...this.sections,
-      ...section.split("."),
-    ].join(".");
-  }
-
-  get<T>(section: string, defaultValue?: T): T | undefined {
-    return this.globalConfiguration.get(this.nestedSection(section), defaultValue);
-  }
-
-  has(section: string): boolean {
-    return this.globalConfiguration.has(this.nestedSection(section));
-  }
-
-  inspect<T>(_section: string): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; languageIds?: string[] | undefined; } | undefined {
-    throw new Error(`FakeScopedWorkspaceConfiguration.inspect is not yet supported`);
-  }
-
-  async update(section: string, value: any, unqualifiedConfigurationTarget?: boolean | vscode.ConfigurationTarget | null | undefined, overrideInLanguage?: boolean | undefined): Promise<void> {
-    return this.globalConfiguration.update(this.nestedSection(section), value, unqualifiedConfigurationTarget, overrideInLanguage);
   }
 }
 
