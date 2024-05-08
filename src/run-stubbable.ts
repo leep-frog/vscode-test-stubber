@@ -72,16 +72,23 @@ export interface StubbablesConfigInternal extends StubbablesConfig {
 }
 
 export function runStubbableMethodNoInput<O>(nonTestLogic: () => O, testLogic: (config: StubbablesConfigInternal) => O): () => O {
-  return runStubbableMethod<void, O>(
-    (input: void) => nonTestLogic(),
-    (input: void, sc: StubbablesConfigInternal) => testLogic(sc),
+  return runStubbableMethodTwoArgs<void, void, O>(
+    () => nonTestLogic(),
+    (input1: void, input2: void, sc: StubbablesConfigInternal) => testLogic(sc),
   );
 }
 
 export function runStubbableMethod<I, O>(nonTestLogic: (input: I) => O, testLogic: (input: I, config: StubbablesConfigInternal) => O): (input: I) => O {
-  return (input: I) => {
+  return runStubbableMethodTwoArgs<I, void, O>(
+    nonTestLogic,
+    (input1: I, input2: void, sc: StubbablesConfigInternal) => testLogic(input1, sc),
+  );
+}
+
+export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, input2: I2) => O, testLogic: (input1: I1, input2: I2, config: StubbablesConfigInternal) => O): (input1: I1, input2: I2) => O {
+  return (input1: I1, input2: I2) => {
     if (!STUBBABLE_TEST_FILE_PATH) {
-      return nonTestLogic(input);
+      return nonTestLogic(input1, input2);
     }
 
     let stubbableConfig: StubbablesConfigInternal;
@@ -89,11 +96,11 @@ export function runStubbableMethod<I, O>(nonTestLogic: (input: I) => O, testLogi
       stubbableConfig = JSON.parse(readFileSync(STUBBABLE_TEST_FILE_PATH).toString());
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to read/parse stubbables test file: ${e}`);
-      return nonTestLogic(input);
+      return nonTestLogic(input1, input2);
     }
     stubbableConfig.changed = undefined;
 
-    const ret = testLogic(input, stubbableConfig);
+    const ret = testLogic(input1, input2, stubbableConfig);
 
     try {
       if (stubbableConfig.changed) {

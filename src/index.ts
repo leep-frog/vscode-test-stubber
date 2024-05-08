@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { showQuickPick } from './quick-pick';
-import { GetConfigurationProps, vscodeWorkspaceGetConfiguration } from './workspace-configuration';
+import { vscodeWorkspaceGetConfiguration } from './workspace-configuration';
 
 export { CloseQuickPickAction, NoOpQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectItemQuickPickAction } from './quick-pick';
 export { StubbablesConfig, TEST_MODE } from './run-stubbable';
@@ -25,10 +25,11 @@ interface VSCodeStubs {
    * Stubbable command to get the workspace configuration
    * Replace any instances of vscode.workspace.getConfiguration() with this method.
    *
-   * @param inpupt
-   * @returns
+   * @param section see vscode.workspace.getConfiguration#section
+   * @param scope see vscode.workspace.getConfiguration#scope
+   * @returns see vscode.workspace.getConfiguration#returns
    */
-  getConfiguration: (inpupt: GetConfigurationProps) => vscode.WorkspaceConfiguration;
+  getConfiguration: (section?: string, scope?: vscode.ConfigurationScope) => vscode.WorkspaceConfiguration;
 }
 
 // VSCODE_STUBS is the object that contains all stubbable VS Code methods.
