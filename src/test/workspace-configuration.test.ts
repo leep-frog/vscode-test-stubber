@@ -203,6 +203,7 @@ interface TestCase {
   section: string;
   scopedSection?: string;
   value: any;
+  overrideInLanguage?: boolean;
   unqualifiedConfigurationTarget?: boolean | vscode.ConfigurationTarget | null | undefined
   want?: WorkspaceConfiguration;
 }
@@ -335,6 +336,7 @@ const testCases: TestCase[] = [
   {
     name: "Updates configuration for a language",
     languageId: "valyrian",
+    overrideInLanguage: true,
     section: "one",
     value: 111,
     want: {
@@ -348,8 +350,37 @@ const testCases: TestCase[] = [
     },
   },
   {
+    name: "Updates configuration if language overrideInLanguage is false",
+    languageId: "valyrian",
+    overrideInLanguage: false,
+    section: "one",
+    value: 111,
+    want: {
+      configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+        [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+          ["one", 111],
+        ])],
+      ]),
+    },
+  },
+  {
+    name: "Updates configuration if language overrideInLanguage is undefined",
+    languageId: "valyrian",
+    // overrideInLanguage: ...,
+    section: "one",
+    value: 111,
+    want: {
+      configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+        [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+          ["one", 111],
+        ])],
+      ]),
+    },
+  },
+  {
     name: "Updates specific configuration target for a language",
     languageId: "valyrian",
+    overrideInLanguage: true,
     section: "one",
     unqualifiedConfigurationTarget: vscode.ConfigurationTarget.Workspace,
     value: 111,
@@ -367,6 +398,7 @@ const testCases: TestCase[] = [
   {
     name: "Creates configuration for a language if it does not exist",
     languageId: "valyrian",
+    overrideInLanguage: true,
     section: "v2",
     value: "deux",
     scopedSection: "other.place",
@@ -433,8 +465,9 @@ const testCases: TestCase[] = [
     },
   },
   {
-    name: "Inserts leaf into a scoped configuration with a language",
+    name: "Inserts leaf into a scoped configuration for a language",
     languageId: "valyrian",
+    overrideInLanguage: true,
     section: "v2",
     value: "deux",
     scopedSection: "other.place",
@@ -525,6 +558,7 @@ const testCases: TestCase[] = [
   {
     name: "Inserts nodes and leaf into a scoped configuration for a language",
     languageId: "valyrian",
+    overrideInLanguage: true,
     section: "v2",
     value: "deux",
     scopedSection: "other.place",
@@ -607,6 +641,7 @@ const testCases: TestCase[] = [
   {
     name: "Inserts nodes and leaf into an empty scoped configuration for a language",
     languageId: "valyrian",
+    overrideInLanguage: true,
     section: "v2",
     value: "deux",
     scopedSection: "other.place",
@@ -693,6 +728,7 @@ const testCases: TestCase[] = [
   {
     name: "Updates a scoped configuration for a language",
     languageId: "valyrian",
+    overrideInLanguage: true,
     section: "v2",
     value: "deux",
     scopedSection: "other.place",
@@ -742,6 +778,134 @@ const testCases: TestCase[] = [
       ]),
     },
   },
+  {
+    name: "Updates non-language setting if overrideInLanguage is false",
+    languageId: "valyrian",
+    overrideInLanguage: false,
+    section: "v2",
+    value: "deux",
+    scopedSection: "other.place",
+    unqualifiedConfigurationTarget: vscode.ConfigurationTarget.Global,
+    startingCfg: {
+      languageConfiguration: new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>([
+        ["valyrian", new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.Global, new Map<string, any>([
+            ["one", 111],
+            ["other", new Map<string, any>([
+              ["place", new Map<string, any>([
+                ["v1", "un"],
+                ["v2", "TWO"],
+                ["v3", "trois"],
+              ])],
+            ])],
+          ])],
+          [vscode.ConfigurationTarget.Workspace, new Map<string, any>([
+            ["one", 222],
+          ])],
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["one", 333],
+          ])]
+        ])],
+      ]),
+    },
+    want: {
+      // This is unchanged
+      languageConfiguration: new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>([
+        ["valyrian", new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.Global, new Map<string, any>([
+            ["one", 111],
+            ["other", new Map<string, any>([
+              ["place", new Map<string, any>([
+                ["v1", "un"],
+                ["v2", "TWO"],
+                ["v3", "trois"],
+              ])],
+            ])],
+          ])],
+          [vscode.ConfigurationTarget.Workspace, new Map<string, any>([
+            ["one", 222],
+          ])],
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["one", 333],
+          ])]
+        ])],
+      ]),
+      // This is added
+      configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+        [vscode.ConfigurationTarget.Global, new Map<string, any>([
+          ["other", new Map<string, any>([
+            ["place", new Map<string, any>([
+              ["v2", "deux"],
+            ])],
+          ])],
+        ])],
+      ]),
+    },
+  },
+  {
+    name: "Updates non-language setting if overrideInLanguage is false",
+    languageId: "valyrian",
+    overrideInLanguage: false,
+    section: "place.v2",
+    value: "deux",
+    scopedSection: "other",
+    unqualifiedConfigurationTarget: vscode.ConfigurationTarget.Global,
+    startingCfg: {
+      languageConfiguration: new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>([
+        ["valyrian", new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.Global, new Map<string, any>([
+            ["one", 111],
+            ["other", new Map<string, any>([
+              ["place", new Map<string, any>([
+                ["v1", "un"],
+                ["v2", "TWO"],
+                ["v3", "trois"],
+              ])],
+            ])],
+          ])],
+          [vscode.ConfigurationTarget.Workspace, new Map<string, any>([
+            ["one", 222],
+          ])],
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["one", 333],
+          ])]
+        ])],
+      ]),
+    },
+    want: {
+      // This is unchanged
+      languageConfiguration: new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>([
+        ["valyrian", new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.Global, new Map<string, any>([
+            ["one", 111],
+            ["other", new Map<string, any>([
+              ["place", new Map<string, any>([
+                ["v1", "un"],
+                ["v2", "TWO"],
+                ["v3", "trois"],
+              ])],
+            ])],
+          ])],
+          [vscode.ConfigurationTarget.Workspace, new Map<string, any>([
+            ["one", 222],
+          ])],
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["one", 333],
+          ])]
+        ])],
+      ]),
+      // This is added
+      configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+        [vscode.ConfigurationTarget.Global, new Map<string, any>([
+          ["other", new Map<string, any>([
+            ["place", new Map<string, any>([
+              ["v2", "deux"],
+            ])],
+          ])],
+        ])],
+      ]),
+    },
+  },
   /* Useful for commenting out tests. */
 ];
 
@@ -753,7 +917,7 @@ suite('FakeWorkspaceConfiguration tests', () => {
 
       const parts = tc.scopedSection === undefined ? [] : tc.scopedSection.split(".");
       const cfg = globalCfg.scopedConfiguration(sc, parts, tc.languageId);
-      await cfg.update(tc.section, tc.value, tc.unqualifiedConfigurationTarget);
+      await cfg.update(tc.section, tc.value, tc.unqualifiedConfigurationTarget, tc.overrideInLanguage);
 
       const want = new FakeWorkspaceConfiguration(tc.want);
       assert.deepStrictEqual(globalCfg, want);

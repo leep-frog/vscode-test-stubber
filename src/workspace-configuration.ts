@@ -77,12 +77,15 @@ class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration 
     this.languageId = languageId;
   }
 
-  private currentConfiguration(must?: boolean): Map<vscode.ConfigurationTarget, Map<string, any>> | undefined {
-    if (this.languageId === undefined) {
+  private currentConfiguration(props?: {
+    must?: boolean;
+    noLanguageId?: boolean;
+  }): Map<vscode.ConfigurationTarget, Map<string, any>> | undefined {
+    if (this.languageId === undefined || props?.noLanguageId) {
       return this.globalConfiguration.configuration;
     }
 
-    if (must && !this.globalConfiguration.languageConfiguration.has(this.languageId)) {
+    if (props?.must && !this.globalConfiguration.languageConfiguration.has(this.languageId)) {
       this.globalConfiguration.languageConfiguration.set(this.languageId, new Map<vscode.ConfigurationTarget, Map<string, any>>());
     }
     return this.globalConfiguration.languageConfiguration.get(this.languageId);
@@ -114,11 +117,10 @@ class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration 
   async update(section: string, value: any, unqualifiedConfigurationTarget?: boolean | vscode.ConfigurationTarget | null | undefined, overrideInLanguage?: boolean | undefined): Promise<void> {
     const configurationTarget = this.parseConfigurationTarget(unqualifiedConfigurationTarget);
 
-    if (!!overrideInLanguage) {
-      throw new Error(`overrideInLanguage is not yet supported`);
-    }
-
-    const currentCfg = this.currentConfiguration(true)!;
+    const currentCfg = this.currentConfiguration({
+      must: true,
+      noLanguageId: !overrideInLanguage,
+    })!;
     if (!currentCfg.has(configurationTarget)) {
       currentCfg.set(configurationTarget, new Map<string, any>());
     }
