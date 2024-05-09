@@ -40,7 +40,7 @@ suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
   testCases.forEach(tc => {
-    test('Sample test', async () => {
+    test(tc.name, async () => {
       await new SimpleTestCase(tc.stc).runTest(stubbableTestFile, tc.sc).catch(e => {
         throw e;
       });
