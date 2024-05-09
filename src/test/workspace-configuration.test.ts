@@ -921,7 +921,13 @@ suite('FakeWorkspaceConfiguration tests', () => {
 
       const want = new FakeWorkspaceConfiguration(tc.want);
       assert.deepStrictEqual(globalCfg, want);
-      assert.deepStrictEqual(sc, {changed: true});
+      assert.deepStrictEqual(sc, {
+        changed: true,
+        gotWorkspaceConfiguration: {
+          configuration: tc.want?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
+          languageConfiguration: tc.want?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
+        },
+      });
     });
   });
 });

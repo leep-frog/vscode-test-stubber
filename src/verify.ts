@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
-import { stubWorkspaceConfiguration } from "./workspace-configuration";
 
 // Set of data to store during tests
 export interface TestData {
@@ -104,7 +103,7 @@ export function testVerify(stubbableTestFile: string) {
   assert.deepStrictEqual(classless(finalConfig.gotQuickPickOptions ?? []), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
   // Verify workspace configuration
-  assert.deepStrictEqual(stubWorkspaceConfiguration, finalConfig.expectedWorkspaceConfiguration || {});
+  assert.deepStrictEqual(finalConfig.gotWorkspaceConfiguration, finalConfig.expectedWorkspaceConfiguration || {});
 
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");

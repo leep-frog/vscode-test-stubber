@@ -126,6 +126,12 @@ class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration 
     }
     nestedSet(currentCfg.get(configurationTarget)!, [...this.sections, section].join("."), value);
     this.sc.changed = true;
+
+    // TODO: Replace FakeWorkspaceConfiguration class just with the interface
+    this.sc.gotWorkspaceConfiguration = {
+      configuration: this.globalConfiguration.configuration,
+      languageConfiguration: this.globalConfiguration.languageConfiguration,
+    };
   }
 
   // This logic was determined by the definition of the configurationTarget argument in the `update` method's javadoc

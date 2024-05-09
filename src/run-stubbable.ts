@@ -64,6 +64,9 @@ export interface StubbablesConfigInternal extends StubbablesConfig {
   // The quick picks that were generated.
   gotQuickPickOptions?: vscode.QuickPickItem[][];
 
+  // The WorkspaceConfiguration resulting from the test.
+  gotWorkspaceConfiguration?: WorkspaceConfiguration;
+
   // If there is any error in stubbables configuration internal logic, it is set here.
   error?: string;
 
