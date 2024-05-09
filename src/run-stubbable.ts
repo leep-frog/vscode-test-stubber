@@ -3,7 +3,7 @@ import { jsonIgnoreReplacer } from 'json-ignore';
 import * as vscode from 'vscode';
 import { InputBoxExecution } from './input-box';
 import { QuickPickAction } from "./quick-pick";
-import { WorkspaceConfiguration } from './workspace-configuration';
+import { WorkspaceConfiguration, replacer, reviver } from './workspace-configuration';
 
 // STUBBABLE_TEST_FILE_PATH is the path to the file to which stubbable data is written.
 // This is needed to communicate data between the test code and the separate extension executable
@@ -96,7 +96,7 @@ export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, 
 
     let stubbableConfig: StubbablesConfigInternal;
     try {
-      stubbableConfig = JSON.parse(readFileSync(STUBBABLE_TEST_FILE_PATH).toString());
+      stubbableConfig = JSONParse(readFileSync(STUBBABLE_TEST_FILE_PATH).toString());
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to read/parse stubbables test file: ${e}`);
       return nonTestLogic(input1, input2);
@@ -108,7 +108,7 @@ export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, 
     try {
       if (stubbableConfig.changed) {
         // jsonIgnoreReplacer ensures that relevant @jsonIgnore() annotated fields aren't included
-        writeFileSync(STUBBABLE_TEST_FILE_PATH, JSON.stringify(stubbableConfig, jsonIgnoreReplacer));
+        writeFileSync(STUBBABLE_TEST_FILE_PATH, JSONStringify(stubbableConfig));
       }
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to write stubbables config back test file: ${e}`);
@@ -116,4 +116,16 @@ export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, 
 
     return ret;
   };
+}
+
+export function JSONParse(text: string) {
+  return JSON.parse(text, reviver);
+}
+
+export function JSONStringify(obj: any) {
+  return JSON.stringify(obj, doubleReplacer);
+}
+
+function doubleReplacer(this: any, key: string, value: any): any {
+  return replacer(key, jsonIgnoreReplacer(key, value));
 }

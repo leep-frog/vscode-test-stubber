@@ -1,10 +1,9 @@
 import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
-import { jsonIgnoreReplacer } from "json-ignore";
 import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
-import { StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
+import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
 // Set of data to store during tests
 export interface TestData {
@@ -66,7 +65,7 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
     internalCfg.expectedWorkspaceConfiguration = config?.workspaceConfiguration;
   }
 
-  writeFileSync(stubbableTestFile, JSON.stringify(internalCfg || {}, jsonIgnoreReplacer));
+  writeFileSync(stubbableTestFile, JSONStringify(internalCfg || {}));
 
   // Stub out message functions
   testData.infoMessages = [];
@@ -81,7 +80,7 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
 
 export function testVerify(stubbableTestFile: string) {
   // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-  const finalConfig: StubbablesConfigInternal = JSON.parse(readFileSync(stubbableTestFile).toString(), jsonIgnoreReplacer);
+  const finalConfig: StubbablesConfigInternal = JSONParse(readFileSync(stubbableTestFile).toString());
   assertUndefined(finalConfig.error, "StubbablesConfig.error");
   assertUndefined(testData.error, "TestData.error");
 
@@ -113,7 +112,7 @@ export function testVerify(stubbableTestFile: string) {
 
 // Remove class info so deepStrictEqual works on any type
 function classless(obj: any) {
-  return JSON.parse(JSON.stringify(obj, jsonIgnoreReplacer));
+  return JSONParse(JSONStringify(obj));
 }
 
 function assertUndefined<T>(t: T | undefined, objectName: string) {
