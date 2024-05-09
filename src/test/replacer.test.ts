@@ -1,4 +1,5 @@
 import assert from "assert";
+import { JSONParse, JSONStringify } from "../run-stubbable";
 import { replacer, reviver } from "../workspace-configuration";
 
 interface TestCase {
@@ -90,6 +91,10 @@ suite('Map replacer/reviver tests', () => {
       const gotString = JSON.stringify(tc.from(), replacer);
       const got = JSON.parse(gotString, reviver);
       assert.deepStrictEqual(got, tc.from());
+
+      const gotStringify = JSONStringify(tc.from());
+      const gotParse = JSONParse(gotString);
+      assert.deepStrictEqual(gotParse, tc.from());
     });
   });
 });

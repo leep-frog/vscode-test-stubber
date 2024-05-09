@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync } from 'fs';
-import { jsonIgnoreReplacer } from 'json-ignore';
 import * as vscode from 'vscode';
 import { InputBoxExecution } from './input-box';
 import { QuickPickAction } from "./quick-pick";
@@ -107,7 +106,6 @@ export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, 
 
     try {
       if (stubbableConfig.changed) {
-        // jsonIgnoreReplacer ensures that relevant @jsonIgnore() annotated fields aren't included
         writeFileSync(STUBBABLE_TEST_FILE_PATH, JSONStringify(stubbableConfig));
       }
     } catch (e) {
@@ -123,9 +121,5 @@ export function JSONParse(text: string) {
 }
 
 export function JSONStringify(obj: any) {
-  return JSON.stringify(obj, doubleReplacer);
-}
-
-function doubleReplacer(this: any, key: string, value: any): any {
-  return replacer(key, jsonIgnoreReplacer(key, value));
+  return JSON.stringify(obj, replacer);
 }
