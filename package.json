@@ -2,7 +2,7 @@
   "name": "@leep-frog/vscode-test-stubber",
   "displayName": "vscode-test-stubber",
   "description": "",
-  "version": "1.7.2",
+  "version": "1.7.4",
   "publisher": "groogle",
   "engines": {
     "vscode": "^1.87.0"
@@ -11,7 +11,7 @@
     "Other"
   ],
   "activationEvents": [],
-  "main": "./out/extension.js",
+  "main": "./out/index.js",
   "module": "./out/index.mjs",
   "types": "./out/index.d.ts",
   "files": [
