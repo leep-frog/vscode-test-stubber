@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { nestedGet, nestedHas, nestedSet } from './nested';
-import { StubbablesConfigInternal, runStubbableMethodTwoArgs } from './run-stubbable';
+import { StubbablesConfigInternal, runStubbableMethodTwoArgs, updateConfig } from './run-stubbable';
 
 export function vscodeWorkspaceGetConfiguration(): (section?: string, scope?: vscode.ConfigurationScope) => vscode.WorkspaceConfiguration {
   return runStubbableMethodTwoArgs<string | undefined, vscode.ConfigurationScope | undefined, vscode.WorkspaceConfiguration>(
@@ -58,8 +58,8 @@ function getLanguageId(scope: vscode.ConfigurationScope | undefined, sc: Stubbab
     return languageScope.languageId;
   }
 
-  sc.changed = true;
   sc.error = "Only languageId is supported for ConfigurationScope";
+  updateConfig(sc);
   throw new Error("Only languageId is supported for ConfigurationScope");
 }
 
@@ -152,13 +152,13 @@ class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration 
       currentCfg.set(configurationTarget, new Map<string, any>());
     }
     nestedSet(currentCfg.get(configurationTarget)!, [...this.sections, section].join("."), value);
-    this.sc.changed = true;
 
     // TODO: Replace FakeWorkspaceConfiguration class just with the interface
     this.sc.gotWorkspaceConfiguration = {
       configuration: this.globalConfiguration.configuration,
       languageConfiguration: this.globalConfiguration.languageConfiguration,
     };
+    updateConfig(this.sc);
   }
 
   // This logic was determined by the definition of the configurationTarget argument in the `update` method's javadoc

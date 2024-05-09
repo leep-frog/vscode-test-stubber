@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { StubbablesConfigInternal, runStubbableMethod } from './run-stubbable';
+import { StubbablesConfigInternal, runStubbableMethod, updateConfig } from './run-stubbable';
 
 export function quickPickOneTimeSetup() {
   const originalFunc = vscode.window.createQuickPick;
@@ -10,42 +10,45 @@ export function showQuickPick() {
   return runStubbableMethod<vscode.QuickPick<vscode.QuickPickItem>, Thenable<void>>(
     async (qp: vscode.QuickPick<vscode.QuickPickItem>) => qp.show(),
     async (qp: vscode.QuickPick<vscode.QuickPickItem>, sc: StubbablesConfigInternal) => {
-      sc.changed = true;
-      if (sc.gotQuickPickOptions === undefined) {
-        sc.gotQuickPickOptions = [];
-      }
-      sc.gotQuickPickOptions.push(qp.items.map(item => {
-        return {
-          // Copy the item elements in case the reference is updated elsewhere.
-          ...item,
-        };
-      }));
+      try {
+        if (sc.gotQuickPickOptions === undefined) {
+          sc.gotQuickPickOptions = [];
+        }
+        sc.gotQuickPickOptions.push(qp.items.map(item => {
+          return {
+            // Copy the item elements in case the reference is updated elsewhere.
+            ...item,
+          };
+        }));
 
-      const genericQuickPickAction = sc.quickPickActions?.shift();
-      if (!genericQuickPickAction) {
-        sc.error = [
-          `Ran out of quickPickSelections for quick pick:`,
-          `Title:       ${qp.title}`,
-          `Placeholder: ${qp.placeholder}`,
-          `Items: [`,
-          ...qp.items.map(item => JSON.stringify(item)),
-          `]`,
-        ].join("\n");
-        return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
-      }
+        const genericQuickPickAction = sc.quickPickActions?.shift();
+        if (!genericQuickPickAction) {
+          sc.error = [
+            `Ran out of quickPickSelections for quick pick:`,
+            `Title:       ${qp.title}`,
+            `Placeholder: ${qp.placeholder}`,
+            `Items: [`,
+            ...qp.items.map(item => JSON.stringify(item)),
+            `]`,
+          ].join("\n");
+          return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
+        }
 
-      const actionHandler = quickPickActionHandlers.get(genericQuickPickAction.kind);
-      if (!actionHandler) {
-        sc.error = `Unsupported QuickPickActionKind: ${genericQuickPickAction.kind}`;
-        return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
-      }
+        const actionHandler = quickPickActionHandlers.get(genericQuickPickAction.kind);
+        if (!actionHandler) {
+          sc.error = `Unsupported QuickPickActionKind: ${genericQuickPickAction.kind}`;
+          return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
+        }
 
-      const action = actionHandler(genericQuickPickAction);
-      const [errorMessage, promise] = action.run(qp);
-      if (errorMessage) {
-        sc.error = errorMessage;
+        const action = actionHandler(genericQuickPickAction);
+        const [errorMessage, promise] = action.run(qp);
+        if (errorMessage) {
+          sc.error = errorMessage;
+        }
+        return promise;
+      } finally {
+        updateConfig(sc);
       }
-      return promise;
     },
   );
 }

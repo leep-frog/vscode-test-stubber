@@ -1,16 +1,17 @@
 {
   "name": "@leep-frog/vscode-test-stubber",
-  "version": "1.7.2",
   "displayName": "vscode-test-stubber",
   "description": "",
+  "version": "1.7.2",
+  "publisher": "groogle",
   "engines": {
-    "vscode": "^1.88.0"
+    "vscode": "^1.87.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [],
-  "main": "./out/index.js",
+  "main": "./out/extension.js",
   "module": "./out/index.mjs",
   "types": "./out/index.d.ts",
   "files": [
@@ -28,7 +29,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "esbuild": "npm run esbuild-base -- --sourcemap",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "lint": "eslint src --fix --ext ts",
     "posttest": "echo 'Open the following file for html coverage report:\nfile:///C:/Users/gleep/Desktop/Coding/vs-code/groog/coverage/index.html'",

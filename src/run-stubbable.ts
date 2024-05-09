@@ -68,9 +68,16 @@ export interface StubbablesConfigInternal extends StubbablesConfig {
 
   // If there is any error in stubbables configuration internal logic, it is set here.
   error?: string;
+}
 
-  // Whether or not the config has changed
-  changed?: boolean;
+export function updateConfig(sc: StubbablesConfigInternal) {
+  try {
+    writeFileSync(STUBBABLE_TEST_FILE_PATH!, JSONStringify(sc));
+  } catch (e) {
+    const msg = `Failed to write stubbables config back test file: ${e}`;
+    console.log(msg);
+    vscode.window.showErrorMessage(msg);
+  }
 }
 
 export function runStubbableMethodNoInput<O>(nonTestLogic: () => O, testLogic: (config: StubbablesConfigInternal) => O): () => O {
@@ -100,17 +107,8 @@ export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, 
       vscode.window.showErrorMessage(`Failed to read/parse stubbables test file: ${e}`);
       return nonTestLogic(input1, input2);
     }
-    stubbableConfig.changed = undefined;
 
     const ret = testLogic(input1, input2, stubbableConfig);
-
-    try {
-      if (stubbableConfig.changed) {
-        writeFileSync(STUBBABLE_TEST_FILE_PATH, JSONStringify(stubbableConfig));
-      }
-    } catch (e) {
-      vscode.window.showErrorMessage(`Failed to write stubbables config back test file: ${e}`);
-    }
 
     return ret;
   };
