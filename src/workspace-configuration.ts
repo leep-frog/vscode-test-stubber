@@ -22,6 +22,32 @@ export function vscodeWorkspaceGetConfiguration(): (section?: string, scope?: vs
   );
 }
 
+interface SerializedMap {
+  type: string;
+  entries: [any, any][];
+}
+
+export function replacer(this: any, key: string, value: any): any {
+  if (!(value instanceof Map)) {
+    return value;
+  }
+
+  const entries = [...(value as Map<any, any>).entries()];
+  const sm: SerializedMap = {
+    type: "@SerializedMap",
+    entries,
+  };
+  return sm;
+}
+
+export function reviver(this: any, key: string, value: any): any {
+  const sm = (value as SerializedMap);
+  if (sm?.type && sm.type === "@SerializedMap") {
+    return new Map<any ,any>(sm.entries);
+  }
+  return value;
+}
+
 function getLanguageId(scope: vscode.ConfigurationScope | undefined, sc: StubbablesConfigInternal): string | undefined {
   if (!scope) {
     return;
@@ -32,6 +58,7 @@ function getLanguageId(scope: vscode.ConfigurationScope | undefined, sc: Stubbab
     return languageScope.languageId;
   }
 
+  sc.changed = true;
   sc.error = "Only languageId is supported for ConfigurationScope";
   throw new Error("Only languageId is supported for ConfigurationScope");
 }

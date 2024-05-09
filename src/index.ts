@@ -6,7 +6,7 @@ export { CloseQuickPickAction, NoOpQuickPickAction, PressItemButtonQuickPickActi
 export { StubbablesConfig, TEST_MODE } from './run-stubbable';
 export { SimpleTestCase, SimpleTestCaseProps, TestCase, UserInteraction, cmd, delay } from './test-case';
 export { testSetup, testVerify } from './verify';
-export { FakeWorkspaceConfiguration } from './workspace-configuration';
+export { FakeWorkspaceConfiguration, replacer, reviver } from './workspace-configuration';
 
 // STUBS is the object that contains all stubbable VS Code methods.
 interface VSCodeStubs {
