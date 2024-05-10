@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
-import { WorkspaceConfiguration } from "./workspace-configuration";
+import { WorkspaceConfiguration, mustWorkspaceConfiguration } from "./workspace-configuration";
 
 // Set of data to store during tests
 export interface TestData {
@@ -59,6 +59,9 @@ function oneTimeSetup() {
 export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) {
   const internalCfg: StubbablesConfigInternal = {
     ...config,
+
+    // If we don't update this in tests, then it will be empty. So need to verify it's set by default
+    gotWorkspaceConfiguration: mustWorkspaceConfiguration(config?.workspaceConfiguration),
   };
 
   // Assume no configuration changes if expected is not provided.

@@ -16,13 +16,68 @@ interface TestCase {
 
 const testCases: TestCase[] = [
   {
+    name: "Does absolutely nothing",
+    sc: {},
+    stc: {},
+  },
+  {
+    name: "Does nothing command",
+    sc: {},
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.doNothing"),
+      ],
+    },
+  },
+  {
+    name: "Does nothing command with initial WorkspaceConfiguration and expected WorkspaceConfiguration",
+    sc: {
+      workspaceConfiguration: {
+        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["hello", "there"],
+          ])],
+        ]),
+      },
+      expectedWorkspaceConfiguration: {
+        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["hello", "there"],
+          ])],
+        ]),
+      },
+    },
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.doNothing"),
+      ],
+    },
+  },
+  {
+    name: "Does nothing command with initial WorkspaceConfiguration and no expected WorkspaceConfiguration",
+    sc: {
+      workspaceConfiguration: {
+        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["hello", "there"],
+          ])],
+        ]),
+      },
+    },
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.doNothing"),
+      ],
+    },
+  },
+  {
     name: "Creates config",
     sc: {
       expectedWorkspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
             ["stubber", new Map<string, any>([
-              ["hope", "valueeee"],
+              ["some-key", "some-value"],
             ])],
           ])],
         ]),
@@ -30,7 +85,7 @@ const testCases: TestCase[] = [
     },
     stc: {
       userInteractions: [
-        cmd("vscode-test-stubber.helloWorld"),
+        cmd("vscode-test-stubber.updateSettings"),
       ],
     },
   },
@@ -51,7 +106,7 @@ const testCases: TestCase[] = [
           [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
             ["stubber", new Map<string, any>([
               ["other", "value"],
-              ["hope", "valueeee"],
+              ["some-key", "some-value"],
             ])],
           ])],
         ]),
@@ -59,7 +114,7 @@ const testCases: TestCase[] = [
     },
     stc: {
       userInteractions: [
-        cmd("vscode-test-stubber.helloWorld"),
+        cmd("vscode-test-stubber.updateSettings"),
       ],
     },
   },

@@ -21,8 +21,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-test-stubber.helloWorld",
-        "title": "Hello World"
+        "command": "vscode-test-stubber.doNothing",
+        "title": "Do Nothing"
+      },
+      {
+        "command": "vscode-test-stubber.updateSettings",
+        "title": "Update Settings"
       }
     ]
   },
