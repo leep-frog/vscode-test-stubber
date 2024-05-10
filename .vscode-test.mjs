@@ -1,4 +1,5 @@
 import { defineConfig } from '@vscode/test-cli';
+import path from 'path';
 
 export default defineConfig({
   files: 'out/test/**/*.test.js',
@@ -9,7 +10,7 @@ export default defineConfig({
   // },
   // workspaceFolder: path.resolve("src", "test", "test-workspace"),
   env: {
-    VSCODE_STUBBABLE_TEST_FILE: `C:\\Users\\gleep\\Desktop\\Coding\\vs-code\\vscode-test-stubber\\.vscode-test\\stubbable-file.json`,
+    VSCODE_STUBBABLE_TEST_FILE: path.resolve(".vscode-test", "stubbable-file.json"),
   },
   mocha: {
     timeout: 60000,
