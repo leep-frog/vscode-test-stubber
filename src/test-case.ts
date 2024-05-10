@@ -87,8 +87,8 @@ export class SimpleTestCase implements TestCase {
 
   readonly props: SimpleTestCaseProps;
 
-  constructor(props: SimpleTestCaseProps) {
-    this.props = props;
+  constructor(props?: SimpleTestCaseProps) {
+    this.props = props || {};
   }
 
   async runTest(stubbableTestFile: string, sc?: StubbablesConfig): Promise<void> {
