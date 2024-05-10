@@ -1,6 +1,7 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
 
+import path from 'path';
 import { StubbablesConfig } from './run-stubbable';
 import { testSetup, testVerify } from './verify';
 
@@ -21,6 +22,23 @@ class CommandExecution implements UserInteraction {
 
 export function cmd(command: string, ...args: any[]) : UserInteraction {
   return new CommandExecution(command, args);
+}
+
+class OpenFileExecution implements UserInteraction {
+
+  readonly filepath: string[];
+
+  constructor(...filepath: string[]) {
+    this.filepath = filepath;
+  }
+
+  async do() {
+    await vscode.workspace.openTextDocument(path.join(...this.filepath)).then(doc => vscode.window.showTextDocument(doc));
+  };
+}
+
+export function openFile(...filepath: string[]) : UserInteraction {
+  return new OpenFileExecution(...filepath);
 }
 
 class DelayExecution implements UserInteraction {
