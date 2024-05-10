@@ -1,6 +1,5 @@
 import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
-import { jsonIgnoreReplacer } from "json-ignore";
 import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
@@ -126,7 +125,7 @@ export function testVerify(stubbableTestFile: string) {
 
 // Remove class info so deepStrictEqual works on any type
 function classless(obj: any) {
-  return JSON.parse(JSON.stringify(obj, jsonIgnoreReplacer));
+  return JSON.parse(JSON.stringify(obj));
 }
 
 function assertUndefined<T>(t: T | undefined, objectName: string) {
