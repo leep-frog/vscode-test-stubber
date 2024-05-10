@@ -16,7 +16,7 @@ interface TestCase {
 
 const testCases: TestCase[] = [
   {
-    name: "Updates and tests config",
+    name: "Creates config",
     sc: {
       expectedWorkspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
@@ -34,6 +34,36 @@ const testCases: TestCase[] = [
       ],
     },
   },
+  {
+    name: "Updates existing config",
+    sc: {
+      workspaceConfiguration: {
+        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["stubber", new Map<string, any>([
+              ["other", "value"],
+            ])],
+          ])],
+        ]),
+      },
+      expectedWorkspaceConfiguration: {
+        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["stubber", new Map<string, any>([
+              ["other", "value"],
+              ["hope", "valueeee"],
+            ])],
+          ])],
+        ]),
+      },
+    },
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.helloWorld"),
+      ],
+    },
+  },
+  /* Useful for commenting out tests. */
 ];
 
 suite('Extension Test Suite', () => {

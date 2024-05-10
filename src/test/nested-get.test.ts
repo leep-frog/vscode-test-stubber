@@ -2,7 +2,7 @@ import assert from "assert";
 import * as vscode from 'vscode';
 import { nestedGet, nestedHas } from "../nested";
 import { StubbablesConfigInternal } from "../run-stubbable";
-import { CONFIGURATION_TARGET_ORDER, FakeWorkspaceConfiguration } from "../workspace-configuration";
+import { CONFIGURATION_TARGET_ORDER, FakeScopedWorkspaceConfiguration } from "../workspace-configuration";
 
 interface ScopedGetTest {
   sections: string[];
@@ -281,20 +281,18 @@ suite('nestedGet tests', () => {
       const section = tc.keys.join(".");
       for (const target of CONFIGURATION_TARGET_ORDER) {
         // Workspace configuration tests
-        const cfg = new FakeWorkspaceConfiguration({
+        const sc: StubbablesConfigInternal = {};
+        const cfg = new FakeScopedWorkspaceConfiguration(sc, {
           configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
             [target, tc.map],
           ]),
-        });
+          languageConfiguration: new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
+        }, tc.scope || []);
 
-        // Scoped workspace configuration tests
-        const sc: StubbablesConfigInternal = {};
-        const scopedCfg = cfg.scopedConfiguration(sc, tc.scope);
-
-        const scopedCfgGot = scopedCfg.get(section);
-        const scopedCfgHas = scopedCfg.has(section);
-        assert.deepStrictEqual(scopedCfgGot, tc.wantCfg);
-        assert.deepStrictEqual(scopedCfgHas, tc.wantCfgHas);
+        const got = cfg.get(section);
+        const has = cfg.has(section);
+        assert.deepStrictEqual(got, tc.wantCfg);
+        assert.deepStrictEqual(has, tc.wantCfgHas);
         assert.deepStrictEqual(sc, {});
       }
     });
