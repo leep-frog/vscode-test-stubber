@@ -68,6 +68,9 @@ export interface StubbablesConfigInternal extends StubbablesConfig {
 
   // If there is any error in stubbables configuration internal logic, it is set here.
   error?: string;
+
+  // If the data needs to be reloaded
+  loaded?: boolean;
 }
 
 export function updateConfig(sc: StubbablesConfigInternal) {
@@ -94,23 +97,29 @@ export function runStubbableMethod<I, O>(nonTestLogic: (input: I) => O, testLogi
   );
 }
 
+let globalStubbableConfig: StubbablesConfigInternal = {};
+
 export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, input2: I2) => O, testLogic: (input1: I1, input2: I2, config: StubbablesConfigInternal) => O): (input1: I1, input2: I2) => O {
   return (input1: I1, input2: I2) => {
     if (!STUBBABLE_TEST_FILE_PATH) {
       return nonTestLogic(input1, input2);
     }
 
-    let stubbableConfig: StubbablesConfigInternal;
     try {
-      stubbableConfig = JSONParse(readFileSync(STUBBABLE_TEST_FILE_PATH).toString());
+      const newStubbableConfig: StubbablesConfigInternal = JSONParse(readFileSync(STUBBABLE_TEST_FILE_PATH).toString());
+      // If not already loaded, then starting a new test
+      if (!newStubbableConfig.loaded) {
+        // TODO: Add test for this (if nested, stubbable writes, then an issue, e.g. update configuration inside of quick pick)
+        globalStubbableConfig = newStubbableConfig;
+        globalStubbableConfig.loaded = true;
+        updateConfig(globalStubbableConfig);
+      }
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to read/parse stubbables test file: ${e}`);
       return nonTestLogic(input1, input2);
     }
 
-    const ret = testLogic(input1, input2, stubbableConfig);
-
-    return ret;
+    return testLogic(input1, input2, globalStubbableConfig);
   };
 }
 
@@ -119,5 +128,5 @@ export function JSONParse(text: string) {
 }
 
 export function JSONStringify(obj: any) {
-  return JSON.stringify(obj, replacer);
+  return JSON.stringify(obj, replacer, 2);
 }

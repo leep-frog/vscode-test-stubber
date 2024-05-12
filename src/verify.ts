@@ -6,6 +6,9 @@ import { quickPickOneTimeSetup } from "./quick-pick";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 import { WorkspaceConfiguration, mustWorkspaceConfiguration } from "./workspace-configuration";
 
+// TODO: Try to move StubbablesConfigInternal data inside of TestData object
+// (or confirm why that isn't possible).
+
 // Set of data to store during tests
 export interface TestData {
   infoMessages: string[];
