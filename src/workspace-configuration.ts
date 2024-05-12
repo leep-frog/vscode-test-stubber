@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { nestedGet, nestedHas, nestedSet } from './nested';
+import { JSONStringify } from './run-stubbable';
 import { TestData, testData } from './verify';
 
 // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
@@ -53,8 +54,9 @@ function getLanguageId(scope: vscode.ConfigurationScope | undefined, td: TestDat
     return languageScope.languageId;
   }
 
-  td.error = "Only languageId is supported for ConfigurationScope";
-  throw new Error("Only languageId is supported for ConfigurationScope");
+  const msg = `Only languageId is supported for ConfigurationScope; got ${JSONStringify(scope)}`;
+  td.error = msg;
+  throw new Error(msg);
 }
 
 export const CONFIGURATION_TARGET_ORDER = [
