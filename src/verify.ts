@@ -1,5 +1,4 @@
 import assert from "assert";
-import { expect } from "earl";
 import { readFileSync, writeFileSync } from "fs";
 import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
@@ -116,10 +115,12 @@ export function testVerify(stubbableTestFile: string) {
   assert.deepStrictEqual(classless(finalConfig.gotQuickPickOptions ?? []), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
   // Verify workspace configuration
-  expect(testData.workspaceConfiguration!).toEqual({
-    configuration: finalConfig.expectedWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
-    languageConfiguration: finalConfig.expectedWorkspaceConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
-  });
+  assert.deepStrictEqual(classlessMap(testData.workspaceConfiguration!),
+    classlessMap({
+      configuration: finalConfig.expectedWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
+      languageConfiguration: finalConfig.expectedWorkspaceConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
+    }),
+  );
 
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
@@ -130,6 +131,10 @@ export function testVerify(stubbableTestFile: string) {
 // Remove class info so deepStrictEqual works on any type
 function classless(obj: any) {
   return JSON.parse(JSON.stringify(obj));
+}
+
+function classlessMap(obj: any) {
+  return JSONParse(JSONStringify(obj));
 }
 
 function assertUndefined<T>(t: T | undefined, objectName: string) {
