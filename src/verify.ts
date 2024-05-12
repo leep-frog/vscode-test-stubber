@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
-import { WorkspaceConfiguration, mustWorkspaceConfiguration } from "./workspace-configuration";
+import { WorkspaceConfiguration, mustWorkspaceConfiguration, vscodeWorkspaceGetConfiguration } from "./workspace-configuration";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
 // (or confirm why that isn't possible).
@@ -49,6 +49,8 @@ function oneTimeSetup() {
     testData.errorMessages.push(s);
     originalShowError(s);
   };
+
+  vscode.workspace.getConfiguration = vscodeWorkspaceGetConfiguration();
 
   quickPickOneTimeSetup();
   didOneTime = true;

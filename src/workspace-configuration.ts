@@ -5,12 +5,13 @@ import { StubbablesConfigInternal, runStubbableMethodTwoArgs, updateConfig } fro
 // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
 // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
 
-export function vscodeWorkspaceGetConfiguration(): (section?: string, scope?: vscode.ConfigurationScope) => vscode.WorkspaceConfiguration {
-  return runStubbableMethodTwoArgs<string | undefined, vscode.ConfigurationScope | undefined, vscode.WorkspaceConfiguration>(
+export function vscodeWorkspaceGetConfiguration(): (section?: string, scope?: vscode.ConfigurationScope | null) => vscode.WorkspaceConfiguration {
+  // TODO: Use testData (and move from oneTimeSetup to test case setup) instead of storing in stubbablesConfig
+  return runStubbableMethodTwoArgs<string | undefined, vscode.ConfigurationScope | null | undefined, vscode.WorkspaceConfiguration>(
     vscode.workspace.getConfiguration,
-    (section: string | undefined, scope: vscode.ConfigurationScope | undefined, sc: StubbablesConfigInternal) => {
+    (section: string | undefined, scope: vscode.ConfigurationScope | null | undefined, sc: StubbablesConfigInternal) => {
 
-      const languageId = getLanguageId(scope, sc);
+      const languageId = getLanguageId(scope === null ? undefined : scope, sc);
 
       // Ensure all fields are set (and ensure that we assing this in the sc object if undefined).
       sc.workspaceConfiguration = mustWorkspaceConfiguration(sc.workspaceConfiguration);
