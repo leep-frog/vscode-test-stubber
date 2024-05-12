@@ -1,28 +1,21 @@
 import * as vscode from 'vscode';
 import { nestedGet, nestedHas, nestedSet } from './nested';
-import { StubbablesConfigInternal, runStubbableMethodTwoArgs, updateConfig } from './run-stubbable';
+import { TestData, testData } from './verify';
 
 // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
 // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
 
-export function vscodeWorkspaceGetConfiguration(): (section?: string, scope?: vscode.ConfigurationScope | null) => vscode.WorkspaceConfiguration {
-  // TODO: Use testData (and move from oneTimeSetup to test case setup) instead of storing in stubbablesConfig
-  return runStubbableMethodTwoArgs<string | undefined, vscode.ConfigurationScope | null | undefined, vscode.WorkspaceConfiguration>(
-    vscode.workspace.getConfiguration,
-    (section: string | undefined, scope: vscode.ConfigurationScope | null | undefined, sc: StubbablesConfigInternal) => {
+export function configurationSetup(configuration: MustWorkspaceConfiguration, td: TestData) {
+  vscode.workspace.getConfiguration = (section: string | undefined, scope: vscode.ConfigurationScope | null | undefined) => {
 
-      const languageId = getLanguageId(scope === null ? undefined : scope, sc);
+    const languageId = getLanguageId(scope === null ? undefined : scope, testData);
 
-      // Ensure all fields are set (and ensure that we assing this in the sc object if undefined).
-      sc.workspaceConfiguration = mustWorkspaceConfiguration(sc.workspaceConfiguration);
+    const sectionParts = section === undefined ? [] : section.split(".");
 
-      const sectionParts = section === undefined ? [] : section.split(".");
-
-      // We already applied must above, so just cast it here
-      return new FakeScopedWorkspaceConfiguration(sc, (sc.workspaceConfiguration as MustWorkspaceConfiguration), sectionParts, languageId);
-    },
-  );
-}
+    // We already applied must above, so just cast it here
+    return new FakeScopedWorkspaceConfiguration(td, configuration, sectionParts, languageId);
+  };
+};
 
 interface SerializedMap {
   type: string;
@@ -50,7 +43,7 @@ export function reviver(this: any, key: string, value: any): any {
   return value;
 }
 
-function getLanguageId(scope: vscode.ConfigurationScope | undefined, sc: StubbablesConfigInternal): string | undefined {
+function getLanguageId(scope: vscode.ConfigurationScope | undefined, td: TestData): string | undefined {
   if (!scope) {
     return;
   }
@@ -60,8 +53,7 @@ function getLanguageId(scope: vscode.ConfigurationScope | undefined, sc: Stubbab
     return languageScope.languageId;
   }
 
-  sc.error = "Only languageId is supported for ConfigurationScope";
-  updateConfig(sc);
+  td.error = "Only languageId is supported for ConfigurationScope";
   throw new Error("Only languageId is supported for ConfigurationScope");
 }
 
@@ -76,7 +68,7 @@ export interface WorkspaceConfiguration {
   languageConfiguration?: Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>;
 }
 
-interface MustWorkspaceConfiguration {
+export interface MustWorkspaceConfiguration {
   configuration: Map<vscode.ConfigurationTarget, Map<string, any>>;
   languageConfiguration: Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>;
 }
@@ -90,13 +82,13 @@ export function mustWorkspaceConfiguration(maybeCfg?: WorkspaceConfiguration): M
 
 export class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
 
-  readonly sc: StubbablesConfigInternal;
+  readonly testData: TestData;
   readonly globalConfiguration: MustWorkspaceConfiguration;
   readonly sections: string[];
   readonly languageId?: string;
 
-  constructor(sc: StubbablesConfigInternal, globalConfiguration: MustWorkspaceConfiguration, sections?: string[], languageId?: string) {
-    this.sc = sc;
+  constructor(testData: TestData, globalConfiguration: MustWorkspaceConfiguration, sections?: string[], languageId?: string) {
+    this.testData = testData;
     this.globalConfiguration = globalConfiguration;
     this.sections = sections || [];
     this.languageId = languageId;
@@ -150,9 +142,6 @@ export class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfigu
       currentCfg.set(configurationTarget, new Map<string, any>());
     }
     nestedSet(currentCfg.get(configurationTarget)!, [...this.sections, section].join("."), value);
-
-    this.sc.gotWorkspaceConfiguration = this.globalConfiguration;
-    updateConfig(this.sc);
   }
 
   // This logic was determined by the definition of the configurationTarget argument in the `update` method's javadoc

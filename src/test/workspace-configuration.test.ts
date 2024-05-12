@@ -1,17 +1,24 @@
 import assert from "assert";
 import vscode from "vscode";
 import { StubbablesConfigInternal } from "../run-stubbable";
+import { TestData } from "../verify";
 import { FakeScopedWorkspaceConfiguration, WorkspaceConfiguration, mustWorkspaceConfiguration } from "../workspace-configuration";
 
 suite("Error tests", () => {
 
+    const td: TestData = {
+      infoMessages: [],
+      errorMessages: [],
+      inputBoxes: [],
+    };
+
   test("inspect throws an error", () => {
-    const scopedCfg = new FakeScopedWorkspaceConfiguration({}, mustWorkspaceConfiguration(), []);
+    const scopedCfg = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(), []);
     assert.throws(() => scopedCfg.inspect("section"), new Error("FakeScopedWorkspaceConfiguration.inspect is not yet supported"));
   });
 
   test("update throws an error", async () => {
-    const scopedCfg = new FakeScopedWorkspaceConfiguration({}, mustWorkspaceConfiguration(), []);
+    const scopedCfg = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(), []);
     assert.rejects(() => scopedCfg.update("section", "value", true, true), new Error("overrideInLanguage is not yet supported"));
   });
 });
@@ -178,7 +185,12 @@ const getTestCases: GetTestCase<any>[] = [
 function runGetTestCase<T>(tc: GetTestCase<T>) {
   const sc: StubbablesConfigInternal = {};
   const m = mustWorkspaceConfiguration(tc.startingCfg);
-  const cfg = new FakeScopedWorkspaceConfiguration(sc, m, tc.scope, tc.languageId);
+  const td: TestData = {
+    infoMessages: [],
+    errorMessages: [],
+    inputBoxes: [],
+  };
+  const cfg = new FakeScopedWorkspaceConfiguration(td, m, tc.scope, tc.languageId);
 
   const has = cfg.has(tc.key);
   const got = cfg.get<T>(tc.key);
@@ -911,20 +923,18 @@ const testCases: TestCase[] = [
 suite('FakeWorkspaceConfiguration tests', () => {
   testCases.forEach(tc => {
     test(tc.name, async () => {
-      const sc: StubbablesConfigInternal = {};
+      const td: TestData = {
+        infoMessages: [],
+        errorMessages: [],
+        inputBoxes: [],
+      };
 
       const parts = tc.scopedSection === undefined ? [] : tc.scopedSection.split(".");
-      const cfg = new FakeScopedWorkspaceConfiguration(sc, mustWorkspaceConfiguration(tc.startingCfg), parts, tc.languageId);
+      const cfg = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(tc.startingCfg), parts, tc.languageId);
       await cfg.update(tc.section, tc.value, tc.unqualifiedConfigurationTarget, tc.overrideInLanguage);
 
-      const want = new FakeScopedWorkspaceConfiguration(sc, mustWorkspaceConfiguration(tc.want), parts, tc.languageId);
+      const want = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(tc.want), parts, tc.languageId);
       assert.deepStrictEqual(cfg, want);
-      assert.deepStrictEqual(sc, {
-        gotWorkspaceConfiguration: {
-          configuration: tc.want?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
-          languageConfiguration: tc.want?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
-        },
-      });
     });
   });
 });

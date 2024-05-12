@@ -119,6 +119,21 @@ const testCases: TestCase[] = [
       ],
     },
   },
+  {
+    name: "Use starting config as expected config if no updates",
+    sc: {
+      workspaceConfiguration: {
+        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+            ["stubber", new Map<string, any>([
+              ["other", "value"],
+            ])],
+          ])],
+        ]),
+      },
+    },
+    stc: {},
+  },
   /* Useful for commenting out tests. */
 ];
 

@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
-import { WorkspaceConfiguration, mustWorkspaceConfiguration, vscodeWorkspaceGetConfiguration } from "./workspace-configuration";
+import { MustWorkspaceConfiguration, WorkspaceConfiguration, configurationSetup, mustWorkspaceConfiguration } from "./workspace-configuration";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
 // (or confirm why that isn't possible).
@@ -23,9 +23,14 @@ export interface TestData {
    * If any stub-related error occurred during the test.
    */
   error?: string;
+
+  /**
+   * The WorkspaceConfiguration to track across the test execution.
+   */
+  workspaceConfiguration?: MustWorkspaceConfiguration
 }
 
-const testData: TestData = {
+export const testData: TestData = {
   infoMessages: [],
   errorMessages: [],
   inputBoxes: [],
@@ -50,8 +55,6 @@ function oneTimeSetup() {
     originalShowError(s);
   };
 
-  vscode.workspace.getConfiguration = vscodeWorkspaceGetConfiguration();
-
   quickPickOneTimeSetup();
   didOneTime = true;
 }
@@ -65,8 +68,7 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   const internalCfg: StubbablesConfigInternal = {
     ...config,
 
-    // If we don't update this in tests, then it will be empty. So need to verify it's set by default
-    gotWorkspaceConfiguration: mustWorkspaceConfiguration(config?.workspaceConfiguration),
+    workspaceConfiguration: mustWorkspaceConfiguration(config?.workspaceConfiguration),
   };
 
   // Assume no configuration changes if expected is not provided.
@@ -80,10 +82,12 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   testData.infoMessages = [];
   testData.errorMessages = [];
   testData.inputBoxes = [];
+  testData.workspaceConfiguration = mustWorkspaceConfiguration(config?.workspaceConfiguration);
 
   oneTimeSetup();
 
   inputBoxSetup(internalCfg, testData);
+  configurationSetup((testData.workspaceConfiguration as MustWorkspaceConfiguration), testData);
 }
 
 
@@ -111,11 +115,7 @@ export function testVerify(stubbableTestFile: string) {
   assert.deepStrictEqual(classless(finalConfig.gotQuickPickOptions ?? []), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
   // Verify workspace configuration
-  assert.deepStrictEqual<WorkspaceConfiguration>(
-    {
-      configuration: finalConfig.gotWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
-      languageConfiguration: finalConfig.gotWorkspaceConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
-    },
+  assert.deepStrictEqual<WorkspaceConfiguration>(testData.workspaceConfiguration!,
     {
       configuration: finalConfig.expectedWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
       languageConfiguration: finalConfig.expectedWorkspaceConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
