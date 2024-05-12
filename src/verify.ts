@@ -115,6 +115,7 @@ export function testVerify(stubbableTestFile: string) {
   assert.deepStrictEqual(classless(finalConfig.gotQuickPickOptions ?? []), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
   // Verify workspace configuration
+  // TODO: This fails without classlessMap when comparing strongly typed settings with undefined fields. TODO is to add a test for this
   assert.deepStrictEqual(classlessMap(testData.workspaceConfiguration!),
     classlessMap({
       configuration: finalConfig.expectedWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
