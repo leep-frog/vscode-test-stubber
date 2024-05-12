@@ -11,7 +11,7 @@
     "Other"
   ],
   "activationEvents": [],
-  "main": "./out/index.js",
+  "main": "./out/extension.js",
   "module": "./out/index.mjs",
   "types": "./out/index.d.ts",
   "files": [
@@ -37,11 +37,11 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "lint": "eslint src --fix --ext ts",
     "pretest": "npm run compile && ts-node ./src/scripts/update-package-json.ts ./out/extension.js",
-    "test": "vscode-test --coverage --coverageReporter lcov --coverageReporter html || echo ''",
+    "test": "vscode-test --coverage --coverageReporter lcov --coverageReporter html",
     "posttest": "ts-node ./src/scripts/update-package-json.ts ./out/index.js && echo 'Open the following file for html coverage report:\nfile:///C:/Users/gleep/Desktop/Coding/vs-code/groog/coverage/index.html'",
     "test-compile": "tsc -p ./",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "prepublishOnly": "npm run test",
+    "prepublishOnly": "npm run test && ts-node ./src/scripts/update-package-json.ts ./out/index.js",
     "watch": "tsc -watch -p ./"
   },
   "publishConfig": {
