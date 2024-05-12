@@ -1,10 +1,11 @@
 import assert from "assert";
+import { expect } from "earl";
 import { readFileSync, writeFileSync } from "fs";
 import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
-import { MustWorkspaceConfiguration, WorkspaceConfiguration, configurationSetup, mustWorkspaceConfiguration } from "./workspace-configuration";
+import { MustWorkspaceConfiguration, configurationSetup, mustWorkspaceConfiguration } from "./workspace-configuration";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
 // (or confirm why that isn't possible).
@@ -115,12 +116,10 @@ export function testVerify(stubbableTestFile: string) {
   assert.deepStrictEqual(classless(finalConfig.gotQuickPickOptions ?? []), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
   // Verify workspace configuration
-  assert.deepStrictEqual<WorkspaceConfiguration>(testData.workspaceConfiguration!,
-    {
-      configuration: finalConfig.expectedWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
-      languageConfiguration: finalConfig.expectedWorkspaceConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
-    },
-  );
+  expect(testData.workspaceConfiguration!).toEqual({
+    configuration: finalConfig.expectedWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
+    languageConfiguration: finalConfig.expectedWorkspaceConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
+  });
 
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
