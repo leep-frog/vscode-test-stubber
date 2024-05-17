@@ -11,8 +11,83 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('vscode-test-stubber.updateSettings', async () => {
       await vscode.workspace.getConfiguration("stubber").update("some-key", "some-value");
     }),
+    vscode.commands.registerCommand('vscode-test-stubber.quickPick', async () => {
+      const items: Item[] = [
+        {
+          label: 'abc',
+          extra: 'info',
+        },
+        {
+          label: 'DEF',
+          description: 'Desc string',
+          detail: 'detail str',
+          fields: 456,
+          extra: 'has numbers',
+        },
+        {
+          label: 'ghi',
+          extra: 'stuff',
+          fields: 789,
+          buttons: [
+            new CustomButton('star'),
+            new CustomButton('close', 'Remove the thing'),
+          ],
+        },
+      ];
+
+      const qp = vscode.window.createQuickPick<Item>();
+      qp.items = items;
+
+      const disposables: vscode.Disposable[] = [];
+      disposables.push(
+        // Dispose of events when leaving the widget
+        qp.onDidHide(e => {
+          disposables.forEach(d => d.dispose);
+        }),
+
+        // Accepting an item
+        qp.onDidAccept(async (): Promise<any> => {
+          const str = qp.selectedItems.map(i => i.label).join('_');
+          vscode.window.showInformationMessage(`Picked items (${qp.selectedItems.length}) [${str}]`);
+          qp.dispose();
+        }),
+
+        // Clicking an item button
+        qp.onDidTriggerItemButton(async (event: vscode.QuickPickItemButtonEvent<Item>): Promise<any> => {
+          switch (event.button.constructor) {
+          case CustomButton:
+            qp.dispose();
+            vscode.window.showInformationMessage(`Got button: ${JSON.stringify(event.button)}`);
+            break;
+          default:
+            qp.dispose();
+            vscode.window.showErrorMessage(`Unknown item button`);
+          }
+        }),
+      );
+
+      qp.show();
+    }),
   );
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
+
+export interface Item extends vscode.QuickPickItem {
+  extra: string;
+  fields?: number;
+}
+
+export class CustomButton implements vscode.QuickInputButton {
+
+  iconPath: vscode.Uri | { light: vscode.Uri; dark: vscode.Uri; } | vscode.ThemeIcon;
+  tooltip?: string;
+  more: string;
+
+  constructor(iconId: string, toolTip?: string) {
+    this.iconPath = new vscode.ThemeIcon(iconId);
+    this.tooltip = toolTip;
+    this.more = `more stuff: ${iconId}`;
+  }
+}

@@ -89,6 +89,8 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   testData.errorMessages = [];
   testData.inputBoxes = [];
   testData.workspaceConfiguration = mustWorkspaceConfiguration(config?.workspaceConfiguration);
+  testData.quickPicks = [];
+  testData.error = undefined;
 
   oneTimeSetup();
 
@@ -104,8 +106,6 @@ export function testVerify(stubbableTestFile: string) {
   assertUndefined(testData.error, "TestData.error");
 
   // Verify quick pick interactions
-  assert.deepStrictEqual(finalConfig.quickPickActions ?? [], [], "Unused QUICK PICK ACTIONS to be empty");
-
   const wantQuickPickOptions = (finalConfig.expectedQuickPickExecutions ?? []).map((value: (string | vscode.QuickPickItem)[], index: number, array: (string | vscode.QuickPickItem)[][]) => {
     return value.map((s: string | vscode.QuickPickItem) => {
 

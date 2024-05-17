@@ -2,7 +2,7 @@
   "name": "@leep-frog/vscode-test-stubber",
   "displayName": "vscode-test-stubber",
   "description": "",
-  "version": "1.9.8",
+  "version": "1.10.0",
   "publisher": "groogle",
   "engines": {
     "vscode": "^1.87.0"
@@ -27,6 +27,10 @@
       {
         "command": "vscode-test-stubber.updateSettings",
         "title": "Update Settings"
+      },
+      {
+        "command": "vscode-test-stubber.quickPick",
+        "title": "Quick Pick"
       }
     ]
   },

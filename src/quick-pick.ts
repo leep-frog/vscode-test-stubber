@@ -28,7 +28,7 @@ export abstract class QuickPickAction implements UserInteraction {
     if (!currentQuickPick.quickPick) {
       const msg = 'No active quick pick';
       testData.error = msg;
-      throw new Error(msg) ;
+      return;
     }
 
     return this.run(currentQuickPick.quickPick);
@@ -40,6 +40,7 @@ export abstract class QuickPickAction implements UserInteraction {
 ******************************/
 
 export class SelectItemQuickPickAction extends QuickPickAction {
+  // TODO: What about cases where multiple items have the same label?
   readonly itemLabels: string[];
 
   constructor(itemLabels: string[]) {
@@ -57,7 +58,8 @@ export class SelectItemQuickPickAction extends QuickPickAction {
     }
 
     if (matchedItems.length !== this.itemLabels.length) {
-      return [`All item labels were not matched. Found [${matchedItems.map(item => item.label)}]; wanted [${this.itemLabels}]`, Promise.resolve()];
+      testData.error = `All item labels were not matched. Found [${matchedItems.map(item => item.label)}]; wanted [${this.itemLabels}]`;
+      return;
     }
 
     return qp.acceptItems(matchedItems);
@@ -99,14 +101,14 @@ export class PressItemButtonQuickPickAction extends QuickPickAction {
       const button = item.buttons?.at(this.buttonIndex);
       if (!button) {
         testData.error = `Item only has ${item.buttons?.length}, but needed at least ${this.buttonIndex+1}`;
-        throw new Error(testData.error);
+        return;
       }
 
       return qp.pressItemButton(item, button);
     }
 
     testData.error = `No items matched the provided item label (${this.itemLabel})`;
-    throw new Error(testData.error);
+    return;
   }
 }
 
@@ -122,24 +124,18 @@ export class PressUnknownButtonQuickPickAction extends QuickPickAction {
     this.itemLabel = itemLabel;
   }
 
-  async run(qp: vscode.QuickPick<vscode.QuickPickItem>): Promise<any> {
+  async run(qp: FakeQuickPick<vscode.QuickPickItem>): Promise<any> {
     for (const item of qp.items) {
       if (item.label !== this.itemLabel) {
         continue;
       }
 
       const unknownButton: vscode.QuickInputButton = new FakeQuickInputButton();
-      qp.show();
-      const fqp = qp as FakeQuickPick<vscode.QuickPickItem>;
-      try {
-        return fqp.pressItemButton(item, unknownButton);
-      } catch (e) {
-        throw new Error(`An error occurred. The most likely cause is that you're creating your QuickPick with vscode.window.createQuickPick() instead of stubbables.createQuickPick(). Actual error is below:\n\n${e}`);
-      }
+      return qp.pressItemButton(item, unknownButton);
     }
 
     testData.error = `No items matched the provided item label (${this.itemLabel})`;
-    throw new Error(testData.error);
+    return;
   }
 }
 
@@ -176,6 +172,7 @@ export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.Qui
     await this.runAsyncsInSequence(undefined, this.acceptHandlers);
   }
 
+  // TODO: Support and test this
   public async pressButton(button: vscode.QuickInputButton): Promise<any> {
     await this.runAsyncsInSequence(button, this.buttonHandlers);
   }
@@ -191,6 +188,8 @@ export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.Qui
   }
 
   // QuickPick overridden fields/methods below
+
+  // TODO: Support and test this
   public onDidTriggerButton(listener: (e: vscode.QuickInputButton) => Promise<any>, thisArgs?: any, disposables?: vscode.Disposable[]) : vscode.Disposable {
     this.buttonHandlers.push(listener);
     return this.realQuickPick.onDidTriggerButton(listener, thisArgs, disposables);
