@@ -1,98 +1,54 @@
 import * as vscode from 'vscode';
-import { StubbablesConfigInternal, runStubbableMethod, updateConfig } from './run-stubbable';
+import { UserInteraction } from './test-case';
+import { testData } from './verify';
 
 export function quickPickOneTimeSetup() {
   const originalFunc = vscode.window.createQuickPick;
   vscode.window.createQuickPick = () => new FakeQuickPick(originalFunc());
 }
 
-export function showQuickPick() {
-  return runStubbableMethod<vscode.QuickPick<vscode.QuickPickItem>, Thenable<void>>(
-    async (qp: vscode.QuickPick<vscode.QuickPickItem>) => qp.show(),
-    async (qp: vscode.QuickPick<vscode.QuickPickItem>, sc: StubbablesConfigInternal) => {
-      try {
-        if (sc.gotQuickPickOptions === undefined) {
-          sc.gotQuickPickOptions = [];
-        }
-        sc.gotQuickPickOptions.push(qp.items.map(item => {
-          return {
-            // Copy the item elements in case the reference is updated elsewhere.
-            ...item,
-          };
-        }));
-
-        const genericQuickPickAction = sc.quickPickActions?.shift();
-        if (!genericQuickPickAction) {
-          sc.error = [
-            `Ran out of quickPickSelections for quick pick:`,
-            `Title:       ${qp.title}`,
-            `Placeholder: ${qp.placeholder}`,
-            `Items: [`,
-            ...qp.items.map(item => JSON.stringify(item)),
-            `]`,
-          ].join("\n");
-          return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
-        }
-
-        const actionHandler = quickPickActionHandlers.get(genericQuickPickAction.kind);
-        if (!actionHandler) {
-          sc.error = `Unsupported QuickPickActionKind: ${genericQuickPickAction.kind}`;
-          return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
-        }
-
-        const action = actionHandler(genericQuickPickAction);
-        const [errorMessage, promise] = action.run(qp);
-        if (errorMessage) {
-          sc.error = errorMessage;
-        }
-        return promise;
-      } finally {
-        updateConfig(sc);
-      }
-    },
-  );
+interface CurrentQuickPick {
+  quickPick?: FakeQuickPick<any>;
 }
+
+const currentQuickPick: CurrentQuickPick = {};
 
 /*******************
  * QuickPickAction *
 ********************/
 
-// All this rigmarole is needed since we serialize to and from JSON (which causes method info to be lost (i.e. the `run`method)).
-// That is why we need the separation of the QuickPickAction types and the QuickPickActionHandler types.
-
-enum QuickPickActionKind {
-  Close,
-  SelectItem,
-  PressItemButton,
-  PressUnknownButton,
-  NoOp,
-}
-
-export interface QuickPickAction {
-  readonly kind: QuickPickActionKind;
+export abstract class QuickPickAction implements UserInteraction {
   // Run the quick pick action, or return an error
   // It returns [string|undefined, Thenable<any>] because when initially had Thenable<string | undefined>,
   // the error wasn't being set properly in the stubbables method.
-  run(qp: vscode.QuickPick<vscode.QuickPickItem>): [string | undefined, Thenable<any>];
+  // abstract run(qp: vscode.QuickPick<vscode.QuickPickItem>): [string | undefined, Thenable<any>];
+  abstract run(fqp: FakeQuickPick<vscode.QuickPickItem>): Promise<any>;
+
+  async do(): Promise<any> {
+    if (!currentQuickPick.quickPick) {
+      const msg = 'No active quick pick';
+      testData.error = msg;
+      throw new Error(msg) ;
+    }
+
+    return this.run(currentQuickPick.quickPick);
+  }
 }
 
 /*****************************
  * SelectItemQuickPickAction *
 ******************************/
 
-export class SelectItemQuickPickAction implements QuickPickAction {
-  readonly kind: QuickPickActionKind = QuickPickActionKind.SelectItem;
+export class SelectItemQuickPickAction extends QuickPickAction {
   readonly itemLabels: string[];
 
   constructor(itemLabels: string[]) {
+    super();
     this.itemLabels = itemLabels;
   }
 
-  static fromJsonifiedObject(action: SelectItemQuickPickAction): SelectItemQuickPickAction {
-    return new SelectItemQuickPickAction(action.itemLabels);
-  }
-
-  run(qp: vscode.QuickPick<vscode.QuickPickItem>): [string | undefined, Thenable<any>] {
+  // run(qp: vscode.QuickPick<vscode.QuickPickItem>): [string | undefined, Thenable<any>] {
+  async run(qp: FakeQuickPick<vscode.QuickPickItem>): Promise<any> {
     const matchedItems: vscode.QuickPickItem[] = [];
     for (const item of qp.items) {
       if (this.itemLabels.includes(item.label)) {
@@ -104,14 +60,7 @@ export class SelectItemQuickPickAction implements QuickPickAction {
       return [`All item labels were not matched. Found [${matchedItems.map(item => item.label)}]; wanted [${this.itemLabels}]`, Promise.resolve()];
     }
 
-    qp.show();
-    const fqp = qp as FakeQuickPick<vscode.QuickPickItem>;
-    try {
-      const promise = fqp.acceptItems(matchedItems);
-      return [undefined, promise];
-    } catch (e) {
-      throw new Error(`An error occurred. The most likely cause is that you're creating your QuickPick with vscode.window.createQuickPick() instead of stubbables.createQuickPick(). Actual error is below:\n\n${e}`);
-    }
+    return qp.acceptItems(matchedItems);
   }
 }
 
@@ -119,31 +68,9 @@ export class SelectItemQuickPickAction implements QuickPickAction {
  * CloseQuickPickAction *
 *************************/
 
-export class CloseQuickPickAction implements QuickPickAction {
-  kind = QuickPickActionKind.Close;
-
-  run(): [string | undefined, Thenable<any>] {
-    return [undefined, vscode.commands.executeCommand("workbench.action.closeQuickOpen")];
-  }
-
-  static fromJsonifiedObject(action: CloseQuickPickAction): CloseQuickPickAction {
-    return new CloseQuickPickAction();
-  }
-}
-
-/************************
- * NoOpQuickPickAction *
-*************************/
-
-export class NoOpQuickPickAction implements QuickPickAction {
-  kind = QuickPickActionKind.NoOp;
-
-  run(): [string | undefined, Thenable<any>] {
-    return [undefined, Promise.resolve()];
-  }
-
-  static fromJsonifiedObject(action: NoOpQuickPickAction): NoOpQuickPickAction {
-    return new NoOpQuickPickAction();
+export class CloseQuickPickAction extends QuickPickAction {
+  async run(): Promise<any> {
+    return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
   }
 }
 
@@ -151,23 +78,19 @@ export class NoOpQuickPickAction implements QuickPickAction {
  * PressItemButtonQuickPickAction *
 ***********************************/
 
-export class PressItemButtonQuickPickAction implements QuickPickAction {
-  kind = QuickPickActionKind.PressItemButton;
+export class PressItemButtonQuickPickAction extends QuickPickAction {
   itemLabel: string;
   // Use buttonIndex because contents of button (e.g. icon and tooltip)
   // will be validated in tests when comparing wantQuickPickOptions
   buttonIndex: number;
 
   constructor(itemLabel: string, buttonIndex: number) {
+    super();
     this.itemLabel = itemLabel;
     this.buttonIndex = buttonIndex;
   }
 
-  static fromJsonifiedObject(action: PressItemButtonQuickPickAction): PressItemButtonQuickPickAction {
-    return new PressItemButtonQuickPickAction(action.itemLabel, action.buttonIndex);
-  }
-
-  run(qp: vscode.QuickPick<vscode.QuickPickItem>): [string | undefined, Thenable<any>] {
+  async run(qp: FakeQuickPick<vscode.QuickPickItem>): Promise<any> {
     for (const item of qp.items) {
       if (item.label !== this.itemLabel) {
         continue;
@@ -175,20 +98,15 @@ export class PressItemButtonQuickPickAction implements QuickPickAction {
 
       const button = item.buttons?.at(this.buttonIndex);
       if (!button) {
-        return [`Item only has ${item.buttons?.length}, but needed at least ${this.buttonIndex+1}`, Promise.resolve()];
+        testData.error = `Item only has ${item.buttons?.length}, but needed at least ${this.buttonIndex+1}`;
+        throw new Error(testData.error);
       }
 
-      qp.show();
-      const fqp = qp as FakeQuickPick<vscode.QuickPickItem>;
-      try {
-        const promise = fqp.pressItemButton(item, button);
-        return [undefined, promise];
-      } catch (e) {
-        throw new Error(`An error occurred. The most likely cause is that you're creating your QuickPick with vscode.window.createQuickPick() instead of stubbables.createQuickPick(). Actual error is below:\n\n${e}`);
-      }
+      return qp.pressItemButton(item, button);
     }
 
-    return [`No items matched the provided text selection`, Promise.resolve()];
+    testData.error = `No items matched the provided item label (${this.itemLabel})`;
+    throw new Error(testData.error);
   }
 }
 
@@ -196,19 +114,15 @@ export class PressItemButtonQuickPickAction implements QuickPickAction {
  * PressUnknownButtonQuickPickAction *
 **************************************/
 
-export class PressUnknownButtonQuickPickAction implements QuickPickAction {
-  kind = QuickPickActionKind.PressUnknownButton;
+export class PressUnknownButtonQuickPickAction extends QuickPickAction {
   itemLabel: string;
 
   constructor(itemLabel: string) {
+    super();
     this.itemLabel = itemLabel;
   }
 
-  static fromJsonifiedObject(action: PressUnknownButtonQuickPickAction): PressUnknownButtonQuickPickAction {
-    return new PressUnknownButtonQuickPickAction(action.itemLabel);
-  }
-
-  run(qp: vscode.QuickPick<vscode.QuickPickItem>): [string | undefined, Thenable<any>] {
+  async run(qp: vscode.QuickPick<vscode.QuickPickItem>): Promise<any> {
     for (const item of qp.items) {
       if (item.label !== this.itemLabel) {
         continue;
@@ -218,14 +132,14 @@ export class PressUnknownButtonQuickPickAction implements QuickPickAction {
       qp.show();
       const fqp = qp as FakeQuickPick<vscode.QuickPickItem>;
       try {
-        const promise = fqp.pressItemButton(item, unknownButton);
-        return [undefined, promise];
+        return fqp.pressItemButton(item, unknownButton);
       } catch (e) {
         throw new Error(`An error occurred. The most likely cause is that you're creating your QuickPick with vscode.window.createQuickPick() instead of stubbables.createQuickPick(). Actual error is below:\n\n${e}`);
       }
     }
 
-    return [`No items matched the provided text selection`, Promise.resolve()];
+    testData.error = `No items matched the provided item label (${this.itemLabel})`;
+    throw new Error(testData.error);
   }
 }
 
@@ -236,23 +150,11 @@ class FakeQuickInputButton implements vscode.QuickInputButton {
   }
 }
 
-/*****************************
- * Handler Aggregation Types *
-******************************/
-
-const quickPickActionHandlers = new Map<QuickPickActionKind, (props: any) => QuickPickAction>([
-  [QuickPickActionKind.SelectItem, SelectItemQuickPickAction.fromJsonifiedObject],
-  [QuickPickActionKind.Close, CloseQuickPickAction.fromJsonifiedObject],
-  [QuickPickActionKind.NoOp, NoOpQuickPickAction.fromJsonifiedObject],
-  [QuickPickActionKind.PressItemButton, PressItemButtonQuickPickAction.fromJsonifiedObject],
-  [QuickPickActionKind.PressUnknownButton, PressUnknownButtonQuickPickAction.fromJsonifiedObject],
-]);
-
 /*********************
  * QuickPick Wrapper *
 **********************/
 
-class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.QuickPick<T> {
+export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.QuickPick<T> {
 
   private readonly realQuickPick: vscode.QuickPick<T>;
 
@@ -355,9 +257,16 @@ class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.QuickPick<
 
   public get ignoreFocusOut(): boolean { return this.realQuickPick.ignoreFocusOut; }
 
-  public show(): void { this.realQuickPick.show(); }
+  public show(): void {
+    testData.quickPicks.push([...this.items]);
+    currentQuickPick.quickPick = this;
+    this.realQuickPick.show();
+  }
 
-  public hide(): void { this.realQuickPick.hide(); }
+  public hide(): void {
+    this.realQuickPick.hide();
+    currentQuickPick.quickPick = undefined;
+  }
 
   public get onDidHide(): vscode.Event<void> { return this.realQuickPick.onDidHide; }
 

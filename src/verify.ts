@@ -28,12 +28,18 @@ export interface TestData {
    * The WorkspaceConfiguration to track across the test execution.
    */
   workspaceConfiguration?: MustWorkspaceConfiguration
+
+  /**
+   * The quick pick executions made during the test.
+   */
+  quickPicks: vscode.QuickPickItem[][];
 }
 
 export const testData: TestData = {
   infoMessages: [],
   errorMessages: [],
   inputBoxes: [],
+  quickPicks: [],
 };
 
 let didOneTime = false;
@@ -112,7 +118,7 @@ export function testVerify(stubbableTestFile: string) {
       return (s as vscode.QuickPickItem);
     });
   });
-  assert.deepStrictEqual(classless(finalConfig.gotQuickPickOptions ?? []), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
+  assert.deepStrictEqual(classless(testData.quickPicks), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
   // Verify workspace configuration
   // TODO: This fails without classlessMap when comparing strongly typed settings with undefined fields. TODO is to add a test for this

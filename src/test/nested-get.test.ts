@@ -287,6 +287,7 @@ suite('nestedGet tests', () => {
           errorMessages: [],
           infoMessages: [],
           inputBoxes: [],
+          quickPicks: [],
         };
         const cfg = new FakeScopedWorkspaceConfiguration(td, {
           configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
@@ -304,6 +305,7 @@ suite('nestedGet tests', () => {
           errorMessages: [],
           infoMessages: [],
           inputBoxes: [],
+          quickPicks: [],
         };
         assert.deepStrictEqual(td, expectedTD);
       }

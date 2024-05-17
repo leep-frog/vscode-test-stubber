@@ -10,6 +10,7 @@ suite("Error tests", () => {
       infoMessages: [],
       errorMessages: [],
       inputBoxes: [],
+      quickPicks: [],
     };
 
   test("inspect throws an error", () => {
@@ -189,6 +190,7 @@ function runGetTestCase<T>(tc: GetTestCase<T>) {
     infoMessages: [],
     errorMessages: [],
     inputBoxes: [],
+    quickPicks: [],
   };
   const cfg = new FakeScopedWorkspaceConfiguration(td, m, tc.scope, tc.languageId);
 
@@ -927,6 +929,7 @@ suite('FakeWorkspaceConfiguration tests', () => {
         infoMessages: [],
         errorMessages: [],
         inputBoxes: [],
+        quickPicks: [],
       };
 
       const parts = tc.scopedSection === undefined ? [] : tc.scopedSection.split(".");

@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as vscode from 'vscode';
 import { InputBoxExecution } from './input-box';
-import { QuickPickAction } from "./quick-pick";
 import { WorkspaceConfiguration, replacer, reviver } from './workspace-configuration';
 
 // STUBBABLE_TEST_FILE_PATH is the path to the file to which stubbable data is written.
@@ -14,12 +13,7 @@ export const TEST_MODE: boolean = !!STUBBABLE_TEST_FILE_PATH;
 
 // StubbablesConfig is the VS Code configuration defined on a per-test basis.
 export interface StubbablesConfig {
-  /**
-   * The set of quick pick Actions.
-   */
-  quickPickActions?: QuickPickAction[];
-
-  /**
+/**
    * The expected set of quick pick executions to have run during the test.
    */
   expectedQuickPickExecutions?: (vscode.QuickPickItem | string)[][];
@@ -60,9 +54,6 @@ export interface StubbablesConfig {
 // IMPORTANT NOTE: Only fields for stubbed methods should be added here
 // Everything else should be added to verify.testData.
 export interface StubbablesConfigInternal extends StubbablesConfig {
-  // The quick picks that were generated.
-  gotQuickPickOptions?: vscode.QuickPickItem[][];
-
   // If there is any error in stubbables configuration internal logic, it is set here.
   error?: string;
 
