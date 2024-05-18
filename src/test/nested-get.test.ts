@@ -2,7 +2,6 @@ import assert from "assert";
 import * as vscode from 'vscode';
 import { nestedGet, nestedHas } from "../nested";
 import { StubbablesConfigInternal } from "../run-stubbable";
-import { TestData } from "../verify";
 import { CONFIGURATION_TARGET_ORDER, FakeScopedWorkspaceConfiguration } from "../workspace-configuration";
 
 interface ScopedGetTest {
@@ -283,13 +282,7 @@ suite('nestedGet tests', () => {
       for (const target of CONFIGURATION_TARGET_ORDER) {
         // Workspace configuration tests
         const sc: StubbablesConfigInternal = {};
-        const td: TestData = {
-          errorMessages: [],
-          infoMessages: [],
-          inputBoxes: [],
-          quickPicks: [],
-        };
-        const cfg = new FakeScopedWorkspaceConfiguration(td, {
+        const cfg = new FakeScopedWorkspaceConfiguration({
           configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
             [target, tc.map],
           ]),
@@ -300,14 +293,6 @@ suite('nestedGet tests', () => {
         const has = cfg.has(section);
         assert.deepStrictEqual(got, tc.wantCfg);
         assert.deepStrictEqual(has, tc.wantCfgHas);
-
-        const expectedTD: TestData = {
-          errorMessages: [],
-          infoMessages: [],
-          inputBoxes: [],
-          quickPicks: [],
-        };
-        assert.deepStrictEqual(td, expectedTD);
       }
     });
   });

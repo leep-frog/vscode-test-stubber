@@ -1,22 +1,43 @@
+import assert from 'assert';
 import * as vscode from 'vscode';
 import { nestedGet, nestedHas, nestedSet } from './nested';
 import { JSONStringify } from './run-stubbable';
-import { TestData, testData } from './verify';
+import { Stubber, TestData, classlessMap, testData } from './verify';
 
 // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
 // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
 
-export function configurationSetup(configuration: MustWorkspaceConfiguration, td: TestData) {
-  vscode.workspace.getConfiguration = (section: string | undefined, scope: vscode.ConfigurationScope | null | undefined) => {
+export class WorkspaceConfigurationStubber implements Stubber {
 
-    const languageId = getLanguageId(scope === null ? undefined : scope, testData);
+  readonly workspaceConfiguration: MustWorkspaceConfiguration;
+  readonly expectedWorkspaceConfiguration: MustWorkspaceConfiguration;
+  error?: string;
 
-    const sectionParts = section === undefined ? [] : section.split(".");
+  constructor(wc?: WorkspaceConfiguration, expectedWc?: WorkspaceConfiguration) {
+    this.workspaceConfiguration = mustWorkspaceConfiguration(wc);
+    // TODO: Test update on existing config fails (since might need to deep copy the starting one).
+    this.expectedWorkspaceConfiguration = mustWorkspaceConfiguration(expectedWc || wc);
+  }
 
-    // We already applied must above, so just cast it here
-    return new FakeScopedWorkspaceConfiguration(td, configuration, sectionParts, languageId);
-  };
-};
+  oneTimeSetup(): void {}
+
+  setup(): void {
+    vscode.workspace.getConfiguration = (section: string | undefined, scope: vscode.ConfigurationScope | null | undefined) => {
+
+      const languageId = getLanguageId(scope === null ? undefined : scope, testData);
+
+      const sectionParts = section === undefined ? [] : section.split(".");
+
+      // We already applied must above, so just cast it here
+      return new FakeScopedWorkspaceConfiguration(this.workspaceConfiguration, sectionParts, languageId);
+    };
+  }
+
+  verify(): void {
+    // TODO: This fails without classlessMap when comparing strongly typed settings with undefined fields. TODO is to add a test for this
+    assert.deepStrictEqual(classlessMap(this.workspaceConfiguration), classlessMap(this.expectedWorkspaceConfiguration));
+  }
+}
 
 interface SerializedMap {
   type: string;
@@ -84,13 +105,11 @@ export function mustWorkspaceConfiguration(maybeCfg?: WorkspaceConfiguration): M
 
 export class FakeScopedWorkspaceConfiguration implements vscode.WorkspaceConfiguration {
 
-  readonly testData: TestData;
   readonly globalConfiguration: MustWorkspaceConfiguration;
   readonly sections: string[];
   readonly languageId?: string;
 
-  constructor(testData: TestData, globalConfiguration: MustWorkspaceConfiguration, sections?: string[], languageId?: string) {
-    this.testData = testData;
+  constructor(globalConfiguration: MustWorkspaceConfiguration, sections?: string[], languageId?: string) {
     this.globalConfiguration = globalConfiguration;
     this.sections = sections || [];
     this.languageId = languageId;

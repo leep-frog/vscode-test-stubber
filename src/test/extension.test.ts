@@ -77,9 +77,14 @@ const testCases: TestCase[] = [
       ],
     },
   },
+  // WorkspaceConfiguration tests
   {
     name: "Does nothing command with initial WorkspaceConfiguration and expected WorkspaceConfiguration",
-    sc: {
+    sc: {},
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.doNothing"),
+      ],
       workspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
@@ -94,16 +99,15 @@ const testCases: TestCase[] = [
           ])],
         ]),
       },
-    },
-    stc: {
-      userInteractions: [
-        cmd("vscode-test-stubber.doNothing"),
-      ],
     },
   },
   {
     name: "Does nothing command with initial WorkspaceConfiguration and no expected WorkspaceConfiguration",
-    sc: {
+    sc: {},
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.doNothing"),
+      ],
       workspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
@@ -112,15 +116,14 @@ const testCases: TestCase[] = [
         ]),
       },
     },
-    stc: {
-      userInteractions: [
-        cmd("vscode-test-stubber.doNothing"),
-      ],
-    },
   },
   {
     name: "Creates config",
-    sc: {
+    sc: {},
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.updateSettings"),
+      ],
       expectedWorkspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
@@ -130,16 +133,15 @@ const testCases: TestCase[] = [
           ])],
         ]),
       },
-    },
-    stc: {
-      userInteractions: [
-        cmd("vscode-test-stubber.updateSettings"),
-      ],
     },
   },
   {
     name: "Updates existing config",
-    sc: {
+    sc: {},
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.updateSettings"),
+      ],
       workspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
@@ -160,15 +162,11 @@ const testCases: TestCase[] = [
         ]),
       },
     },
-    stc: {
-      userInteractions: [
-        cmd("vscode-test-stubber.updateSettings"),
-      ],
-    },
   },
   {
     name: "Use starting config as expected config if no updates",
-    sc: {
+    sc: {},
+    stc: {
       workspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
           [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
@@ -179,13 +177,11 @@ const testCases: TestCase[] = [
         ]),
       },
     },
-    stc: {},
   },
   // Quick pick tests
   // TODO: Error tests
   /*{
     name: "[QuickPick] Select items when no quickPick",
-    runSolo: true,
     sc: {},
     stc: {
       userInteractions: [
@@ -195,7 +191,6 @@ const testCases: TestCase[] = [
   },*/
   {
     name: "[QuickPick] Select no items",
-    runSolo: true,
     sc: {
       expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [
@@ -211,7 +206,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select one item",
-    runSolo: true,
     sc: {
       expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [
@@ -227,7 +221,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select multiple items",
-    runSolo: true,
     sc: {
       expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [
@@ -244,7 +237,6 @@ const testCases: TestCase[] = [
   // TODO: Test CloseQuickPickAction by closing and then running selectItem and verifying error
   {
     name: "[QuickPick] Press an unknown button",
-    runSolo: true,
     sc: {
       expectedQuickPickExecutions: [basicQPE()],
       expectedErrorMessages: [
@@ -260,7 +252,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Press an item button",
-    runSolo: true,
     sc: {
       expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [

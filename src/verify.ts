@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { quickPickOneTimeSetup } from "./quick-pick";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
-import { MustWorkspaceConfiguration, configurationSetup, mustWorkspaceConfiguration } from "./workspace-configuration";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
 // (or confirm why that isn't possible).
@@ -25,11 +24,6 @@ export interface TestData {
   error?: string;
 
   /**
-   * The WorkspaceConfiguration to track across the test execution.
-   */
-  workspaceConfiguration?: MustWorkspaceConfiguration
-
-  /**
    * The quick pick executions made during the test.
    */
   quickPicks: vscode.QuickPickItem[][];
@@ -42,12 +36,21 @@ export const testData: TestData = {
   quickPicks: [],
 };
 
+export interface Stubber/*<T>*/ {
+  oneTimeSetup(): void;
+  setup(): void;
+  verify(): void;
+  // get(td: TestData): T;
+}
+
 let didOneTime = false;
 
-function oneTimeSetup() {
+function oneTimeSetup(stubbers: Stubber[]) {
   if (didOneTime) {
     return;
   }
+
+  stubbers.forEach(stubber => stubber.oneTimeSetup());
 
   // TODO: try/finally to ensure these are reset (is this really needed though?)
   const originalShowInfo = vscode.window.showInformationMessage;
@@ -70,17 +73,12 @@ function oneTimeSetup() {
  *
  * @param stubbableTestFile the path to the stubbables test file
  */
-export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) {
+export function testSetup(stubbableTestFile: string, stubbers: Stubber[], config?: StubbablesConfig) {
   const internalCfg: StubbablesConfigInternal = {
     ...config,
-
-    workspaceConfiguration: mustWorkspaceConfiguration(config?.workspaceConfiguration),
   };
 
-  // Assume no configuration changes if expected is not provided.
-  if (config?.expectedWorkspaceConfiguration === undefined) {
-    internalCfg.expectedWorkspaceConfiguration = config?.workspaceConfiguration;
-  }
+  const mustStubbers = stubbers || [];
 
   writeFileSync(stubbableTestFile, JSONStringify(internalCfg || {}));
 
@@ -88,22 +86,24 @@ export function testSetup(stubbableTestFile: string, config?: StubbablesConfig) 
   testData.infoMessages = [];
   testData.errorMessages = [];
   testData.inputBoxes = [];
-  testData.workspaceConfiguration = mustWorkspaceConfiguration(config?.workspaceConfiguration);
   testData.quickPicks = [];
   testData.error = undefined;
 
-  oneTimeSetup();
+  oneTimeSetup(mustStubbers);
+
+  mustStubbers.forEach(stubber => stubber.setup());
 
   inputBoxSetup(internalCfg, testData);
-  configurationSetup((testData.workspaceConfiguration as MustWorkspaceConfiguration), testData);
 }
 
 
-export function testVerify(stubbableTestFile: string) {
+export function testVerify(stubbableTestFile: string, stubbers: Stubber[]) {
   // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
   const finalConfig: StubbablesConfigInternal = JSONParse(readFileSync(stubbableTestFile).toString());
   assertUndefined(finalConfig.error, "StubbablesConfig.error");
   assertUndefined(testData.error, "TestData.error");
+
+  const mustStubbers = stubbers || [];
 
   // Verify quick pick interactions
   const wantQuickPickOptions = (finalConfig.expectedQuickPickExecutions ?? []).map((value: (string | vscode.QuickPickItem)[], index: number, array: (string | vscode.QuickPickItem)[][]) => {
@@ -120,27 +120,20 @@ export function testVerify(stubbableTestFile: string) {
   });
   assert.deepStrictEqual(classless(testData.quickPicks), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
-  // Verify workspace configuration
-  // TODO: This fails without classlessMap when comparing strongly typed settings with undefined fields. TODO is to add a test for this
-  assert.deepStrictEqual(classlessMap(testData.workspaceConfiguration!),
-    classlessMap({
-      configuration: finalConfig.expectedWorkspaceConfiguration?.configuration || new Map<vscode.ConfigurationTarget, Map<string, any>>(),
-      languageConfiguration: finalConfig.expectedWorkspaceConfiguration?.languageConfiguration || new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>(),
-    }),
-  );
-
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
 
   verifyInputBox(finalConfig, testData);
+
+  mustStubbers.forEach(stubber => stubber.verify());
 }
 
 // Remove class info so deepStrictEqual works on any type
-function classless(obj: any) {
+export function classless(obj: any) {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function classlessMap(obj: any) {
+export function classlessMap(obj: any) {
   return JSONParse(JSONStringify(obj));
 }
 

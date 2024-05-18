@@ -1,25 +1,17 @@
 import assert from "assert";
 import vscode from "vscode";
 import { StubbablesConfigInternal } from "../run-stubbable";
-import { TestData } from "../verify";
 import { FakeScopedWorkspaceConfiguration, WorkspaceConfiguration, mustWorkspaceConfiguration } from "../workspace-configuration";
 
 suite("Error tests", () => {
 
-    const td: TestData = {
-      infoMessages: [],
-      errorMessages: [],
-      inputBoxes: [],
-      quickPicks: [],
-    };
-
   test("inspect throws an error", () => {
-    const scopedCfg = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(), []);
+    const scopedCfg = new FakeScopedWorkspaceConfiguration(mustWorkspaceConfiguration(), []);
     assert.throws(() => scopedCfg.inspect("section"), new Error("FakeScopedWorkspaceConfiguration.inspect is not yet supported"));
   });
 
   test("update throws an error", async () => {
-    const scopedCfg = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(), []);
+    const scopedCfg = new FakeScopedWorkspaceConfiguration(mustWorkspaceConfiguration(), []);
     assert.rejects(() => scopedCfg.update("section", "value", true, true), new Error("overrideInLanguage is not yet supported"));
   });
 });
@@ -186,13 +178,7 @@ const getTestCases: GetTestCase<any>[] = [
 function runGetTestCase<T>(tc: GetTestCase<T>) {
   const sc: StubbablesConfigInternal = {};
   const m = mustWorkspaceConfiguration(tc.startingCfg);
-  const td: TestData = {
-    infoMessages: [],
-    errorMessages: [],
-    inputBoxes: [],
-    quickPicks: [],
-  };
-  const cfg = new FakeScopedWorkspaceConfiguration(td, m, tc.scope, tc.languageId);
+  const cfg = new FakeScopedWorkspaceConfiguration(m, tc.scope, tc.languageId);
 
   const has = cfg.has(tc.key);
   const got = cfg.get<T>(tc.key);
@@ -925,18 +911,12 @@ const testCases: TestCase[] = [
 suite('FakeWorkspaceConfiguration tests', () => {
   testCases.forEach(tc => {
     test(tc.name, async () => {
-      const td: TestData = {
-        infoMessages: [],
-        errorMessages: [],
-        inputBoxes: [],
-        quickPicks: [],
-      };
 
       const parts = tc.scopedSection === undefined ? [] : tc.scopedSection.split(".");
-      const cfg = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(tc.startingCfg), parts, tc.languageId);
+      const cfg = new FakeScopedWorkspaceConfiguration(mustWorkspaceConfiguration(tc.startingCfg), parts, tc.languageId);
       await cfg.update(tc.section, tc.value, tc.unqualifiedConfigurationTarget, tc.overrideInLanguage);
 
-      const want = new FakeScopedWorkspaceConfiguration(td, mustWorkspaceConfiguration(tc.want), parts, tc.languageId);
+      const want = new FakeScopedWorkspaceConfiguration(mustWorkspaceConfiguration(tc.want), parts, tc.languageId);
       assert.deepStrictEqual(cfg, want);
     });
   });

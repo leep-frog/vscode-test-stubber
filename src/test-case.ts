@@ -3,7 +3,8 @@ import * as vscode from 'vscode';
 
 import path from 'path';
 import { StubbablesConfig } from './run-stubbable';
-import { testSetup, testVerify } from './verify';
+import { Stubber, testSetup, testVerify } from './verify';
+import { WorkspaceConfiguration, WorkspaceConfigurationStubber } from './workspace-configuration';
 
 export interface UserInteraction {
   do(): Promise<any>;
@@ -74,6 +75,9 @@ export interface SimpleTestCaseProps {
   selections?: vscode.Selection[];
   expectedSelections?: vscode.Selection[];
 
+  workspaceConfiguration?: WorkspaceConfiguration;
+  expectedWorkspaceConfiguration?: WorkspaceConfiguration;
+
   /**
    * expectedText is the expected text that is present in the active text editor.
    * If undefined, then the test asserts that there is no active editor.
@@ -121,7 +125,11 @@ export class SimpleTestCase implements TestCase {
       editor.selections = (this.props.selections || [new vscode.Selection(0, 0, 0, 0)]);
     }
 
-    testSetup(stubbableTestFile, sc);
+    const stubbers: Stubber[] = [
+      new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration),
+    ];
+
+    testSetup(stubbableTestFile, stubbers, sc);
 
     // Run the commands
     for (const userInteraction of (this.props.userInteractions || [])) {
@@ -129,7 +137,7 @@ export class SimpleTestCase implements TestCase {
     }
 
     // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-    testVerify(stubbableTestFile);
+    testVerify(stubbableTestFile, stubbers);
 
     const maybeActiveEditor = vscode.window.activeTextEditor;
 

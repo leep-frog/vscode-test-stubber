@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as vscode from 'vscode';
 import { InputBoxExecution } from './input-box';
-import { WorkspaceConfiguration, replacer, reviver } from './workspace-configuration';
+import { replacer, reviver } from './workspace-configuration';
 
 // STUBBABLE_TEST_FILE_PATH is the path to the file to which stubbable data is written.
 // This is needed to communicate data between the test code and the separate extension executable
@@ -17,17 +17,6 @@ export interface StubbablesConfig {
    * The expected set of quick pick executions to have run during the test.
    */
   expectedQuickPickExecutions?: (vscode.QuickPickItem | string)[][];
-
-  /**
-   * The vscode.WorkspaceConfiguration that is configured at the start of the test (this can be modified during test execution).
-   */
-  workspaceConfiguration?: WorkspaceConfiguration;
-
-  /**
-   * The expected vscode.WorkspaceConfiguration at the end of the test. If unset, then the test will verify that
-   * the configuration was unchanged.
-   */
-  expectedWorkspaceConfiguration?: WorkspaceConfiguration;
 
   /**
    * The expected set of info messages to be displayed.
@@ -85,6 +74,7 @@ export function runStubbableMethod<I, O>(nonTestLogic: (input: I) => O, testLogi
   );
 }
 
+// TODO: Remove this?
 let globalStubbableConfig: StubbablesConfigInternal = {};
 
 export function runStubbableMethodTwoArgs<I1, I2, O>(nonTestLogic: (input1: I1, input2: I2) => O, testLogic: (input1: I1, input2: I2, config: StubbablesConfigInternal) => O): (input1: I1, input2: I2) => O {
