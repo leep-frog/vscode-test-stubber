@@ -1,17 +1,57 @@
+import assert from 'assert';
 import * as vscode from 'vscode';
 import { UserInteraction } from './test-case';
-import { testData } from './verify';
+import { Stubber, classless, testData } from './verify';
 
-export function quickPickOneTimeSetup() {
-  const originalFunc = vscode.window.createQuickPick;
-  vscode.window.createQuickPick = () => new FakeQuickPick(originalFunc());
-}
+let realQuickPickFn: <T extends vscode.QuickPickItem> () => vscode.QuickPick<T>;
 
 interface CurrentQuickPick {
   quickPick?: FakeQuickPick<any>;
 }
 
 const currentQuickPick: CurrentQuickPick = {};
+
+export class QuickPickStubber implements Stubber {
+
+  gotQuickPicks: vscode.QuickPickItem[][];
+  currentQuickPick?: FakeQuickPick<any>;
+  error?: string;
+
+  expectedExecutions: (vscode.QuickPickItem | string)[][];
+
+  constructor(expectedExecutions?: (vscode.QuickPickItem | string)[][]) {
+    this.gotQuickPicks = [];
+    this.expectedExecutions = expectedExecutions || [];
+  }
+
+  oneTimeSetup(): void {
+    realQuickPickFn = vscode.window.createQuickPick;
+  }
+
+  setup(): void {
+    vscode.window.createQuickPick = () => new FakeQuickPick(this, realQuickPickFn());
+  }
+
+  // TODO: Add cleanup method to unset the global currentQuickPick variable.
+
+  verify(): void {
+    const wantQuickPickOptions = this.expectedExecutions.map((value: (string | vscode.QuickPickItem)[], index: number, array: (string | vscode.QuickPickItem)[][]) => {
+      return value.map((s: string | vscode.QuickPickItem) => {
+
+        if (typeof(s) === typeof("")) {
+          return {
+            label: s,
+          } as vscode.QuickPickItem;
+        }
+
+        return (s as vscode.QuickPickItem);
+      });
+    });
+    assert.deepStrictEqual(classless(this.gotQuickPicks), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
+  }
+}
+
+
 
 /*******************
  * QuickPickAction *
@@ -152,13 +192,15 @@ class FakeQuickInputButton implements vscode.QuickInputButton {
 
 export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.QuickPick<T> {
 
+  private readonly stubber: QuickPickStubber;
   private readonly realQuickPick: vscode.QuickPick<T>;
 
   private readonly acceptHandlers: ((e: void) => Promise<any>)[];
   private readonly buttonHandlers: ((e: vscode.QuickInputButton) => Promise<any>)[];
   private readonly itemButtonHandlers: ((e: vscode.QuickPickItemButtonEvent<T>) => Promise<any>)[];
 
-  constructor(realQuickPick: vscode.QuickPick<T>) {
+  constructor(stubber: QuickPickStubber, realQuickPick: vscode.QuickPick<T>) {
+    this.stubber = stubber;
     this.realQuickPick = realQuickPick;
     this.acceptHandlers = [];
     this.buttonHandlers = [];
@@ -257,7 +299,7 @@ export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.Qui
   public get ignoreFocusOut(): boolean { return this.realQuickPick.ignoreFocusOut; }
 
   public show(): void {
-    testData.quickPicks.push([...this.items]);
+    this.stubber.gotQuickPicks.push([...this.items]);
     currentQuickPick.quickPick = this;
     this.realQuickPick.show();
   }

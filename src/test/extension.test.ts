@@ -192,7 +192,6 @@ const testCases: TestCase[] = [
   {
     name: "[QuickPick] Select no items",
     sc: {
-      expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [
         'Picked items (0) []',
       ]
@@ -202,12 +201,12 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction([]),
       ],
+      expectedQuickPicks: [basicQPE()],
     },
   },
   {
     name: "[QuickPick] Select one item",
     sc: {
-      expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [
         'Picked items (1) [DEF]',
       ]
@@ -217,12 +216,12 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction(['DEF']),
       ],
+      expectedQuickPicks: [basicQPE()],
     },
   },
   {
     name: "[QuickPick] Select multiple items",
     sc: {
-      expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [
         'Picked items (2) [abc_ghi]',
       ]
@@ -232,13 +231,13 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction(['abc', 'ghi']),
       ],
+      expectedQuickPicks: [basicQPE()],
     },
   },
   // TODO: Test CloseQuickPickAction by closing and then running selectItem and verifying error
   {
     name: "[QuickPick] Press an unknown button",
     sc: {
-      expectedQuickPickExecutions: [basicQPE()],
       expectedErrorMessages: [
         'Unknown item button',
       ],
@@ -248,12 +247,12 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new PressUnknownButtonQuickPickAction('ghi'),
       ],
+      expectedQuickPicks: [basicQPE()],
     },
   },
   {
     name: "[QuickPick] Press an item button",
     sc: {
-      expectedQuickPickExecutions: [basicQPE()],
       expectedInfoMessages: [
         `Got button: {"iconPath":{"id":"close"},"tooltip":"Remove the thing","more":"more stuff: close"}`,
       ]
@@ -263,6 +262,7 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new PressItemButtonQuickPickAction('ghi', 1),
       ],
+      expectedQuickPicks: [basicQPE()],
     },
   },
   /* Useful for commenting out tests. */

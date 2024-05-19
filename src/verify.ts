@@ -2,7 +2,6 @@ import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
 import * as vscode from 'vscode';
 import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
-import { quickPickOneTimeSetup } from "./quick-pick";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
@@ -22,18 +21,12 @@ export interface TestData {
    * If any stub-related error occurred during the test.
    */
   error?: string;
-
-  /**
-   * The quick pick executions made during the test.
-   */
-  quickPicks: vscode.QuickPickItem[][];
 }
 
 export const testData: TestData = {
   infoMessages: [],
   errorMessages: [],
   inputBoxes: [],
-  quickPicks: [],
 };
 
 export interface Stubber/*<T>*/ {
@@ -64,7 +57,6 @@ function oneTimeSetup(stubbers: Stubber[]) {
     originalShowError(s);
   };
 
-  quickPickOneTimeSetup();
   didOneTime = true;
 }
 
@@ -86,7 +78,6 @@ export function testSetup(stubbableTestFile: string, stubbers: Stubber[], config
   testData.infoMessages = [];
   testData.errorMessages = [];
   testData.inputBoxes = [];
-  testData.quickPicks = [];
   testData.error = undefined;
 
   oneTimeSetup(mustStubbers);
@@ -104,21 +95,6 @@ export function testVerify(stubbableTestFile: string, stubbers: Stubber[]) {
   assertUndefined(testData.error, "TestData.error");
 
   const mustStubbers = stubbers || [];
-
-  // Verify quick pick interactions
-  const wantQuickPickOptions = (finalConfig.expectedQuickPickExecutions ?? []).map((value: (string | vscode.QuickPickItem)[], index: number, array: (string | vscode.QuickPickItem)[][]) => {
-    return value.map((s: string | vscode.QuickPickItem) => {
-
-      if (typeof(s) === typeof("")) {
-        return {
-          label: s,
-        } as vscode.QuickPickItem;
-      }
-
-      return (s as vscode.QuickPickItem);
-    });
-  });
-  assert.deepStrictEqual(classless(testData.quickPicks), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
 
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");

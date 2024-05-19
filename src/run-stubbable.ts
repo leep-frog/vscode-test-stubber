@@ -13,11 +13,6 @@ export const TEST_MODE: boolean = !!STUBBABLE_TEST_FILE_PATH;
 
 // StubbablesConfig is the VS Code configuration defined on a per-test basis.
 export interface StubbablesConfig {
-/**
-   * The expected set of quick pick executions to have run during the test.
-   */
-  expectedQuickPickExecutions?: (vscode.QuickPickItem | string)[][];
-
   /**
    * The expected set of info messages to be displayed.
    */

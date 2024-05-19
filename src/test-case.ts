@@ -2,6 +2,7 @@ import assert from 'assert';
 import * as vscode from 'vscode';
 
 import path from 'path';
+import { QuickPickStubber } from './quick-pick';
 import { StubbablesConfig } from './run-stubbable';
 import { Stubber, testSetup, testVerify } from './verify';
 import { WorkspaceConfiguration, WorkspaceConfigurationStubber } from './workspace-configuration';
@@ -78,6 +79,8 @@ export interface SimpleTestCaseProps {
   workspaceConfiguration?: WorkspaceConfiguration;
   expectedWorkspaceConfiguration?: WorkspaceConfiguration;
 
+  expectedQuickPicks?: (vscode.QuickPickItem | string)[][];
+
   /**
    * expectedText is the expected text that is present in the active text editor.
    * If undefined, then the test asserts that there is no active editor.
@@ -127,6 +130,7 @@ export class SimpleTestCase implements TestCase {
 
     const stubbers: Stubber[] = [
       new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration),
+      new QuickPickStubber(this.props.expectedQuickPicks),
     ];
 
     testSetup(stubbableTestFile, stubbers, sc);
