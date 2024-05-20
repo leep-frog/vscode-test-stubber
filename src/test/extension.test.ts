@@ -5,7 +5,6 @@ import path from 'path';
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
 import { PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectItemQuickPickAction } from '../quick-pick';
-import { StubbablesConfig } from '../run-stubbable';
 import { SimpleTestCase, SimpleTestCaseProps, cmd } from '../test-case';
 // import * as myExtension from '../../extension';
 
@@ -13,7 +12,6 @@ export const stubbableTestFile = path.resolve("..", "..", ".vscode-test", "stubb
 
 interface TestCase {
   name: string;
-  sc?: StubbablesConfig;
   stc: SimpleTestCaseProps;
   runSolo?: boolean;
 }
@@ -511,7 +509,7 @@ suite('Extension Test Suite', () => {
     }
 
     test(tc.name, async () => {
-      await new SimpleTestCase(tc.stc).runTest(stubbableTestFile, tc.sc).catch(e => {
+      await new SimpleTestCase(tc.stc).runTest().catch(e => {
         throw e;
       });
     });

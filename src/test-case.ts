@@ -5,7 +5,6 @@ import path from 'path';
 import { InputBoxExecution, InputBoxStubber } from './input-box';
 import { ErrorMessageStubber, InfoMessageStubber, WarningMessageStubber } from './messages';
 import { QuickPickStubber } from './quick-pick';
-import { StubbablesConfig } from './run-stubbable';
 import { Stubber, assertDefined, assertUndefined, testSetup, testVerify } from './verify';
 import { WorkspaceConfiguration, WorkspaceConfigurationStubber } from './workspace-configuration';
 
@@ -66,7 +65,7 @@ export function delay(ms: number): UserInteraction {
 const closeAllEditors = cmd("workbench.action.closeEditorsAndGroup");
 
 export interface TestCase {
-  runTest(stubbableTestFile: string, sc: StubbablesConfig): Promise<void>;
+  runTest(): Promise<void>;
 };
 
 export interface SimpleTestCaseProps {
@@ -125,7 +124,7 @@ export class SimpleTestCase implements TestCase {
     this.props = props || {};
   }
 
-  async runTest(stubbableTestFile: string, sc?: StubbablesConfig): Promise<void> {
+  async runTest(): Promise<void> {
     await closeAllEditors.do();
 
     let editor: vscode.TextEditor | undefined;
@@ -164,7 +163,7 @@ export class SimpleTestCase implements TestCase {
       new InfoMessageStubber(...(this.props.expectedInfoMessages || [])),
     ];
 
-    testSetup(stubbableTestFile, stubbers, sc);
+    testSetup(stubbers);
 
     try {
       // Run the commands
@@ -173,7 +172,7 @@ export class SimpleTestCase implements TestCase {
       }
 
       // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-      testVerify(stubbableTestFile, stubbers);
+      testVerify(stubbers);
 
       const maybeActiveEditor = vscode.window.activeTextEditor;
 

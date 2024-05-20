@@ -1,7 +1,6 @@
 import assert from "assert";
 import * as vscode from 'vscode';
 import { nestedGet, nestedHas } from "../nested";
-import { StubbablesConfigInternal } from "../run-stubbable";
 import { CONFIGURATION_TARGET_ORDER, FakeScopedWorkspaceConfiguration } from "../workspace-configuration";
 
 interface ScopedGetTest {
@@ -281,7 +280,6 @@ suite('nestedGet tests', () => {
       const section = tc.keys.join(".");
       for (const target of CONFIGURATION_TARGET_ORDER) {
         // Workspace configuration tests
-        const sc: StubbablesConfigInternal = {};
         const cfg = new FakeScopedWorkspaceConfiguration({
           configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
             [target, tc.map],

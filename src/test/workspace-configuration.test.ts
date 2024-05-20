@@ -1,6 +1,5 @@
 import assert from "assert";
 import vscode from "vscode";
-import { StubbablesConfigInternal } from "../run-stubbable";
 import { FakeScopedWorkspaceConfiguration, WorkspaceConfiguration, mustWorkspaceConfiguration } from "../workspace-configuration";
 
 suite("Error tests", () => {
@@ -176,7 +175,6 @@ const getTestCases: GetTestCase<any>[] = [
 ];
 
 function runGetTestCase<T>(tc: GetTestCase<T>) {
-  const sc: StubbablesConfigInternal = {};
   const m = mustWorkspaceConfiguration(tc.startingCfg);
   const cfg = new FakeScopedWorkspaceConfiguration(m, tc.scope, tc.languageId);
 

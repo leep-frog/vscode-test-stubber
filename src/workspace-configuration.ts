@@ -1,7 +1,7 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
+import { JSONStringify } from './json';
 import { nestedGet, nestedHas, nestedSet } from './nested';
-import { JSONStringify } from './run-stubbable';
 import { Stubber, TestData, classlessMap, testData } from './verify';
 
 // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
@@ -39,32 +39,6 @@ export class WorkspaceConfigurationStubber implements Stubber {
   }
 
   cleanup(): void {}
-}
-
-interface SerializedMap {
-  type: string;
-  entries: [any, any][];
-}
-
-export function replacer(this: any, key: string, value: any): any {
-  if (!(value instanceof Map)) {
-    return value;
-  }
-
-  const entries = [...(value as Map<any, any>).entries()];
-  const sm: SerializedMap = {
-    type: "@SerializedMap",
-    entries,
-  };
-  return sm;
-}
-
-export function reviver(this: any, key: string, value: any): any {
-  const sm = (value as SerializedMap);
-  if (sm?.type && sm.type === "@SerializedMap") {
-    return new Map<any ,any>(sm.entries);
-  }
-  return value;
 }
 
 function getLanguageId(scope: vscode.ConfigurationScope | undefined, td: TestData): string | undefined {

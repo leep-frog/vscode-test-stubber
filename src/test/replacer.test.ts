@@ -1,6 +1,5 @@
 import assert from "assert";
-import { JSONParse, JSONStringify } from "../run-stubbable";
-import { replacer, reviver } from "../workspace-configuration";
+import { JSONParse, JSONStringify, replacer, reviver } from "../json";
 
 interface TestCase {
   name: string;

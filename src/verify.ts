@@ -1,6 +1,5 @@
 import assert from "assert";
-import { readFileSync, writeFileSync } from "fs";
-import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
+import { JSONParse, JSONStringify } from "./json";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
 // (or confirm why that isn't possible).
@@ -39,14 +38,8 @@ function oneTimeSetup(stubbers: Stubber[]) {
  *
  * @param stubbableTestFile the path to the stubbables test file
  */
-export function testSetup(stubbableTestFile: string, stubbers: Stubber[], config?: StubbablesConfig) {
-  const internalCfg: StubbablesConfigInternal = {
-    ...config,
-  };
-
+export function testSetup(stubbers: Stubber[]) {
   const mustStubbers = stubbers || [];
-
-  writeFileSync(stubbableTestFile, JSONStringify(internalCfg || {}));
 
   testData.error = undefined;
 
@@ -56,10 +49,8 @@ export function testSetup(stubbableTestFile: string, stubbers: Stubber[], config
 }
 
 
-export function testVerify(stubbableTestFile: string, stubbers: Stubber[]) {
+export function testVerify(stubbers: Stubber[]) {
   // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-  const finalConfig: StubbablesConfigInternal = JSONParse(readFileSync(stubbableTestFile).toString());
-  assertUndefined(finalConfig.error, "StubbablesConfig.error");
   assertUndefined(testData.error, "TestData.error");
 
   const mustStubbers = stubbers || [];
