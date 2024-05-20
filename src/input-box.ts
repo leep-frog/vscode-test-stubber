@@ -76,6 +76,8 @@ export class InputBoxStubber implements Stubber {
     assert.deepStrictEqual(this.inputBoxExecutions, this.expectedInputBoxExecutions, "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal");
     assert.deepStrictEqual(this.inputBoxResponses.slice(this.inputBoxExecutions.length), [], "Unused inputBoxResponses");
   }
+
+  cleanup(): void {}
 }
 
 function createExecution(validationMessage?: string | vscode.InputBoxValidationMessage | null, options?: vscode.InputBoxOptions): InputBoxExecution {

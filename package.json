@@ -25,6 +25,18 @@
         "title": "Do Nothing"
       },
       {
+        "command": "vscode-test-stubber.info",
+        "title": "Info Message"
+      },
+      {
+        "command": "vscode-test-stubber.warning",
+        "title": "Warning Message"
+      },
+      {
+        "command": "vscode-test-stubber.error",
+        "title": "Error Message"
+      },
+      {
         "command": "vscode-test-stubber.updateSettings",
         "title": "Update Settings"
       },

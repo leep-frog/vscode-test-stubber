@@ -37,6 +37,8 @@ export class WorkspaceConfigurationStubber implements Stubber {
     // TODO: This fails without classlessMap when comparing strongly typed settings with undefined fields. TODO is to add a test for this
     assert.deepStrictEqual(classlessMap(this.workspaceConfiguration), classlessMap(this.expectedWorkspaceConfiguration));
   }
+
+  cleanup(): void {}
 }
 
 interface SerializedMap {

@@ -49,6 +49,8 @@ export class QuickPickStubber implements Stubber {
     });
     assert.deepStrictEqual(classless(this.gotQuickPicks), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
   }
+
+  cleanup(): void {}
 }
 
 

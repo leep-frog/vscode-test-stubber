@@ -11,17 +11,7 @@ const STUBBABLE_TEST_FILE_PATH = process.env.VSCODE_STUBBABLE_TEST_FILE;
 export const TEST_MODE: boolean = !!STUBBABLE_TEST_FILE_PATH;
 
 // StubbablesConfig is the VS Code configuration defined on a per-test basis.
-export interface StubbablesConfig {
-  /**
-   * The expected set of info messages to be displayed.
-   */
-  expectedInfoMessages?: string[];
-
-  /**
-   * The expected set of error messages to be displayed.
-   */
-  expectedErrorMessages?: string[];
-}
+export interface StubbablesConfig {}
 
 // StubbablesConfigInternal is an internal model used for storing additional fields required for testing.
 // IMPORTANT NOTE: Only fields for stubbed methods should be added here

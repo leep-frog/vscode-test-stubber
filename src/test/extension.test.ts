@@ -13,7 +13,7 @@ export const stubbableTestFile = path.resolve("..", "..", ".vscode-test", "stubb
 
 interface TestCase {
   name: string;
-  sc: StubbablesConfig;
+  sc?: StubbablesConfig;
   stc: SimpleTestCaseProps;
   runSolo?: boolean;
 }
@@ -69,22 +69,59 @@ function basicQPE() {
 const testCases: TestCase[] = [
   {
     name: "Does absolutely nothing",
-    sc: {},
     stc: {},
   },
   {
     name: "Does nothing command",
-    sc: {},
     stc: {
       userInteractions: [
         cmd("vscode-test-stubber.doNothing"),
       ],
     },
   },
+  // Message tests
+  {
+    name: "Sends info messages",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "hello there"),
+      ],
+      expectedInfoMessages: [
+        "hello there",
+      ],
+    },
+  },
+  {
+    name: "Sends warning messages",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.warning", "oops"),
+        cmd("vscode-test-stubber.warning", "a"),
+        cmd("vscode-test-stubber.warning", "daisy"),
+      ],
+      expectedWarningMessages: [
+        "oops",
+        "a",
+        "daisy",
+      ],
+    },
+  },
+  {
+    name: "Sends error messages",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.error", "oh"),
+        cmd("vscode-test-stubber.error", "nooooo"),
+      ],
+      expectedErrorMessages: [
+        "oh",
+        "nooooo",
+      ],
+    },
+  },
   // WorkspaceConfiguration tests
   {
     name: "Does nothing command with initial WorkspaceConfiguration and expected WorkspaceConfiguration",
-    sc: {},
     stc: {
       userInteractions: [
         cmd("vscode-test-stubber.doNothing"),
@@ -107,7 +144,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "Does nothing command with initial WorkspaceConfiguration and no expected WorkspaceConfiguration",
-    sc: {},
     stc: {
       userInteractions: [
         cmd("vscode-test-stubber.doNothing"),
@@ -123,7 +159,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "Creates config",
-    sc: {},
     stc: {
       userInteractions: [
         cmd("vscode-test-stubber.updateSettings"),
@@ -141,7 +176,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "Updates existing config",
-    sc: {},
     stc: {
       userInteractions: [
         cmd("vscode-test-stubber.updateSettings"),
@@ -169,7 +203,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "Use starting config as expected config if no updates",
-    sc: {},
     stc: {
       workspaceConfiguration: {
         configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
@@ -186,7 +219,6 @@ const testCases: TestCase[] = [
   // TODO: Error tests
   /*{
     name: "[QuickPick] Select items when no quickPick",
-    sc: {},
     stc: {
       userInteractions: [
         new SelectItemQuickPickAction([]),
@@ -195,88 +227,73 @@ const testCases: TestCase[] = [
   },*/
   {
     name: "[QuickPick] Select no items",
-    sc: {
-      expectedInfoMessages: [
-        'Picked items (0) []',
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction([]),
       ],
       expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (0) []',
+      ],
     },
   },
   {
     name: "[QuickPick] Select one item",
-    sc: {
-      expectedInfoMessages: [
-        'Picked items (1) [DEF]',
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction(['DEF']),
       ],
       expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (1) [DEF]',
+      ],
     },
   },
   {
     name: "[QuickPick] Select multiple items",
-    sc: {
-      expectedInfoMessages: [
-        'Picked items (2) [abc_ghi]',
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction(['abc', 'ghi']),
       ],
       expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (2) [abc_ghi]',
+      ],
     },
   },
   // TODO: Test CloseQuickPickAction by closing and then running selectItem and verifying error
   {
     name: "[QuickPick] Press an unknown button",
-    sc: {
-      expectedErrorMessages: [
-        'Unknown item button',
-      ],
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
         new PressUnknownButtonQuickPickAction('ghi'),
       ],
       expectedQuickPicks: [basicQPE()],
+      expectedErrorMessages: [
+        'Unknown item button',
+      ],
     },
   },
   {
     name: "[QuickPick] Press an item button",
-    sc: {
-      expectedInfoMessages: [
-        `Got button: {"iconPath":{"id":"close"},"tooltip":"Remove the thing","more":"more stuff: close"}`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
         new PressItemButtonQuickPickAction('ghi', 1),
       ],
       expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        `Got button: {"iconPath":{"id":"close"},"tooltip":"Remove the thing","more":"more stuff: close"}`,
+      ],
     },
   },
   // Input box tests
   {
     name: "[InputBox] Handles no input box options",
-    sc: {
-      expectedInfoMessages: [
-        `Got input box response: start`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox'),
@@ -284,16 +301,14 @@ const testCases: TestCase[] = [
       inputBoxResponses: ["start"],
       expectedInputBoxes: [{
         options: undefined,
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got input box response: start`,
+      ],
     },
   },
   {
     name: "[InputBox] Handles null input box response",
-    sc: {
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -306,16 +321,14 @@ const testCases: TestCase[] = [
           prompt: "Nada",
           validateInputProvided: false,
         },
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ],
     },
   },
   {
     name: "[InputBox] Handles string input box response",
-    sc: {
-      expectedInfoMessages: [
-        `Got input box response: some response`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -328,16 +341,14 @@ const testCases: TestCase[] = [
           title: "An input box",
           validateInputProvided: false,
         },
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got input box response: some response`,
+      ],
     },
   },
   {
     name: "[InputBox] Compares all fields in options",
-    sc: {
-      expectedInfoMessages: [
-        `Got input box response: another response`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -359,16 +370,14 @@ const testCases: TestCase[] = [
           prompt: "prmpt",
           validateInputProvided: true,
         },
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got input box response: another response`,
+      ],
     },
   },
   {
     name: "[InputBox] Returns undefined for invalid input (string input)",
-    sc: {
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -393,16 +402,14 @@ const testCases: TestCase[] = [
           message: "String is too short",
           severity: vscode.InputBoxValidationSeverity.Warning,
         },
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ],
     },
   },
   {
     name: "[InputBox] Returns undefined for invalid input (undefined input)",
-    sc: {
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -427,16 +434,14 @@ const testCases: TestCase[] = [
           message: "String is too short",
           severity: vscode.InputBoxValidationSeverity.Warning,
         },
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ],
     },
   },
   {
     name: "[InputBox] Returns string for valid input (string input)",
-    sc: {
-      expectedInfoMessages: [
-        `Got input box response: abc`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -457,16 +462,14 @@ const testCases: TestCase[] = [
           title: "An input box",
           validateInputProvided: true,
         },
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got input box response: abc`,
+      ],
     },
   },
   {
     name: "[InputBox] Returns undefined for valid input (undefined input)",
-    sc: {
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ]
-    },
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -487,7 +490,10 @@ const testCases: TestCase[] = [
           title: "An input box",
           validateInputProvided: true,
         },
-      }]
+      }],
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ],
     },
   },
   /* Useful for commenting out tests. */

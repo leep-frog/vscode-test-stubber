@@ -1,6 +1,5 @@
 import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
-import * as vscode from 'vscode';
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
@@ -8,25 +7,19 @@ import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } 
 
 // Set of data to store during tests
 export interface TestData {
-  infoMessages: string[];
-  errorMessages: string[];
-
   /**
    * If any stub-related error occurred during the test.
    */
   error?: string;
 }
 
-export const testData: TestData = {
-  infoMessages: [],
-  errorMessages: [],
-};
+export const testData: TestData = {};
 
-export interface Stubber/*<T>*/ {
+export interface Stubber {
   oneTimeSetup(): void;
   setup(): void;
   verify(): void;
-  // get(td: TestData): T;
+  cleanup(): void;
 }
 
 let didOneTime = false;
@@ -37,18 +30,6 @@ function oneTimeSetup(stubbers: Stubber[]) {
   }
 
   stubbers.forEach(stubber => stubber.oneTimeSetup());
-
-  // TODO: try/finally to ensure these are reset (is this really needed though?)
-  const originalShowInfo = vscode.window.showInformationMessage;
-  vscode.window.showInformationMessage = async (s: string) => {
-    testData.infoMessages.push(s);
-    originalShowInfo(s);
-  };
-  const originalShowError = vscode.window.showErrorMessage;
-  vscode.window.showErrorMessage = async (s: string) => {
-    testData.errorMessages.push(s);
-    originalShowError(s);
-  };
 
   didOneTime = true;
 }
@@ -67,9 +48,6 @@ export function testSetup(stubbableTestFile: string, stubbers: Stubber[], config
 
   writeFileSync(stubbableTestFile, JSONStringify(internalCfg || {}));
 
-  // Stub out message functions
-  testData.infoMessages = [];
-  testData.errorMessages = [];
   testData.error = undefined;
 
   oneTimeSetup(mustStubbers);
@@ -85,9 +63,6 @@ export function testVerify(stubbableTestFile: string, stubbers: Stubber[]) {
   assertUndefined(testData.error, "TestData.error");
 
   const mustStubbers = stubbers || [];
-
-  assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
-  assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
 
   mustStubbers.forEach(stubber => stubber.verify());
 }

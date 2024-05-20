@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 import path from 'path';
 import { InputBoxExecution, InputBoxStubber } from './input-box';
+import { ErrorMessageStubber, InfoMessageStubber, WarningMessageStubber } from './messages';
 import { QuickPickStubber } from './quick-pick';
 import { StubbablesConfig } from './run-stubbable';
 import { Stubber, assertDefined, assertUndefined, testSetup, testVerify } from './verify';
@@ -77,6 +78,21 @@ export interface SimpleTestCaseProps {
   selections?: vscode.Selection[];
   expectedSelections?: vscode.Selection[];
 
+  /**
+   * The expected set of info messages to be displayed.
+   */
+  expectedInfoMessages?: string[];
+
+  /**
+   * The expected set of warning messages to be displayed.
+   */
+  expectedWarningMessages?: string[];
+
+  /**
+   * The expected set of error messages to be displayed.
+   */
+  expectedErrorMessages?: string[];
+
   workspaceConfiguration?: WorkspaceConfiguration;
   expectedWorkspaceConfiguration?: WorkspaceConfiguration;
 
@@ -143,27 +159,34 @@ export class SimpleTestCase implements TestCase {
       new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration),
       new QuickPickStubber(this.props.expectedQuickPicks),
       new InputBoxStubber(this.props.inputBoxResponses, this.props.expectedInputBoxes),
+      new ErrorMessageStubber(...(this.props.expectedErrorMessages || [])),
+      new WarningMessageStubber(...(this.props.expectedWarningMessages || [])),
+      new InfoMessageStubber(...(this.props.expectedInfoMessages || [])),
     ];
 
     testSetup(stubbableTestFile, stubbers, sc);
 
-    // Run the commands
-    for (const userInteraction of (this.props.userInteractions || [])) {
-      await userInteraction.do();
-    }
+    try {
+      // Run the commands
+      for (const userInteraction of (this.props.userInteractions || [])) {
+        await userInteraction.do();
+      }
 
-    // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-    testVerify(stubbableTestFile, stubbers);
+      // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
+      testVerify(stubbableTestFile, stubbers);
 
-    const maybeActiveEditor = vscode.window.activeTextEditor;
+      const maybeActiveEditor = vscode.window.activeTextEditor;
 
-    if (this.props.expectedText === undefined) {
-      assertUndefined(maybeActiveEditor, "activeTextEditor");
-      assertUndefined(this.props.expectedSelections, "expectedSelections");
-    } else {
-      const activeEditor = assertDefined(maybeActiveEditor, "activeTextEditor");
-      assert.deepStrictEqual(activeEditor.document.getText(), this.props.expectedText.join("\n"), "Expected DOCUMENT TEXT to be exactly equal");
-      assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections || [new vscode.Selection(0, 0, 0, 0)], "Expected SELECTIONS to be exactly equal");
+      if (this.props.expectedText === undefined) {
+        assertUndefined(maybeActiveEditor, "activeTextEditor");
+        assertUndefined(this.props.expectedSelections, "expectedSelections");
+      } else {
+        const activeEditor = assertDefined(maybeActiveEditor, "activeTextEditor");
+        assert.deepStrictEqual(activeEditor.document.getText(), this.props.expectedText.join("\n"), "Expected DOCUMENT TEXT to be exactly equal");
+        assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections || [new vscode.Selection(0, 0, 0, 0)], "Expected SELECTIONS to be exactly equal");
+      }
+    } finally {
+      stubbers.forEach(stubber => stubber.cleanup());
     }
   }
 }
