@@ -69,12 +69,29 @@ export interface TestCase {
 };
 
 export interface SimpleTestCaseProps {
+  /**
+   * If set, the test is started with an unnamed file with the provided text (separated by newlines).
+   */
   text?: string[];
+
+  /**
+   * If set, the file to open in the test.
+   */
   file?: string;
 
+  /**
+   * The user interactions to run during the test.
+   */
   userInteractions?: UserInteraction[];
 
+  /**
+   * The selections that will start during the test.
+   */
   selections?: vscode.Selection[];
+
+  /**
+   * The expected set of selections in the active text editor at the end of the test.
+   */
   expectedSelections?: vscode.Selection[];
 
   /**
@@ -92,9 +109,19 @@ export interface SimpleTestCaseProps {
    */
   expectedErrorMessages?: string[];
 
+  /**
+   * The starting workspace configuration.
+   */
   workspaceConfiguration?: WorkspaceConfiguration;
+
+  /**
+   * The expected workspace configuration after all user interactions are run.
+   */
   expectedWorkspaceConfiguration?: WorkspaceConfiguration;
 
+  /**
+   * The expected quick pick interactions to have been executed during the test.
+   */
   expectedQuickPicks?: (vscode.QuickPickItem | string)[][];
 
   /**
@@ -116,6 +143,10 @@ export interface SimpleTestCaseProps {
   expectedText?: string[];
 };
 
+/**
+ * A TestCase that runs all supported stubbings and a slew of helper logic (e.g. test setup/configuration)
+ * See the `SimpleTestCaseProps` object for more details.
+ */
 export class SimpleTestCase implements TestCase {
 
   readonly props: SimpleTestCaseProps;
