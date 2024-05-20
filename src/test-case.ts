@@ -186,6 +186,7 @@ export class SimpleTestCase implements TestCase {
     }
 
     const stubbers: Stubber[] = [
+      // TODO: Determine best order in which to verify these.
       new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration),
       new QuickPickStubber(this.props.expectedQuickPicks),
       new InputBoxStubber(this.props.inputBoxResponses, this.props.expectedInputBoxes),

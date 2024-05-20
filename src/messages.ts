@@ -7,8 +7,10 @@ import { Stubber } from "./verify";
  */
 abstract class MessageStubber implements Stubber {
 
+  abstract name: string;
   private readonly messages: string[] = [];
   private readonly expectedMessages: string[];
+  error?: string;
 
   abstract readonly messageName: string;
   abstract readonly originalFunc: <T extends string> (message: string, ...items: T[]) => Thenable<T | undefined>;
@@ -41,6 +43,7 @@ abstract class MessageStubber implements Stubber {
  * Stubber for capturing and verifying info messages.
  */
 export class InfoMessageStubber extends MessageStubber {
+  name: string = "InfoMessageStubber";
   messageName: string = "INFO MESSAGES";
   originalFunc: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined> = vscode.window.showInformationMessage;
   setOriginalFunc(f: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined>): void {
@@ -52,6 +55,7 @@ export class InfoMessageStubber extends MessageStubber {
  * Stubber for capturing and verifying warning messages.
  */
 export class WarningMessageStubber extends MessageStubber {
+  name: string = "WarningMessageStubber";
   messageName: string = "WARNING MESSAGES";
   originalFunc: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined> = vscode.window.showWarningMessage;
   setOriginalFunc(f: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined>): void {
@@ -63,6 +67,7 @@ export class WarningMessageStubber extends MessageStubber {
  * Stubber for capturing and verifying error messages.
  */
 export class ErrorMessageStubber extends MessageStubber {
+  name: string = "ErrorgMessageStubber";
   messageName: string = "ERROR MESSAGES";
   originalFunc: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined> = vscode.window.showErrorMessage;
   setOriginalFunc(f: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined>): void {

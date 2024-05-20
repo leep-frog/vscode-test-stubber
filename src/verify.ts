@@ -1,24 +1,13 @@
 import assert from "assert";
 import { JSONParse, JSONStringify } from "./json";
 
-// TODO: Try to move StubbablesConfigInternal data inside of TestData object
-// (or confirm why that isn't possible).
-
-// Set of data to store during tests
-export interface TestData {
-  /**
-   * If any stub-related error occurred during the test.
-   */
-  error?: string;
-}
-
-export const testData: TestData = {};
-
 export interface Stubber {
+  name: string;
   oneTimeSetup(): void;
   setup(): void;
   verify(): void;
   cleanup(): void;
+  error?: string;
 }
 
 let didOneTime = false;
@@ -41,8 +30,6 @@ function oneTimeSetup(stubbers: Stubber[]) {
 export function testSetup(stubbers: Stubber[]) {
   const mustStubbers = stubbers || [];
 
-  testData.error = undefined;
-
   oneTimeSetup(mustStubbers);
 
   mustStubbers.forEach(stubber => stubber.setup());
@@ -50,12 +37,13 @@ export function testSetup(stubbers: Stubber[]) {
 
 
 export function testVerify(stubbers: Stubber[]) {
-  // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-  assertUndefined(testData.error, "TestData.error");
-
   const mustStubbers = stubbers || [];
 
-  mustStubbers.forEach(stubber => stubber.verify());
+  mustStubbers.forEach(stubber => {
+    assertUndefined(stubber.error, `${stubber.name}.error`);
+    stubber.verify();
+  });
+
 }
 
 // Remove class info so deepStrictEqual works on any type

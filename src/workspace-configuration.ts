@@ -2,13 +2,14 @@ import assert from 'assert';
 import * as vscode from 'vscode';
 import { JSONStringify } from './json';
 import { nestedGet, nestedHas, nestedSet } from './nested';
-import { Stubber, TestData, classlessMap, testData } from './verify';
+import { Stubber, classlessMap } from './verify';
 
 // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
 // That's complicated so our fake abstraction just always separates dots and exlusively uses the latter representation.
 
 export class WorkspaceConfigurationStubber implements Stubber {
 
+  readonly name: string = "WorkspaceConfigurationStubber";
   readonly workspaceConfiguration: MustWorkspaceConfiguration;
   readonly expectedWorkspaceConfiguration: MustWorkspaceConfiguration;
   error?: string;
@@ -24,7 +25,7 @@ export class WorkspaceConfigurationStubber implements Stubber {
   setup(): void {
     vscode.workspace.getConfiguration = (section: string | undefined, scope: vscode.ConfigurationScope | null | undefined) => {
 
-      const languageId = getLanguageId(scope === null ? undefined : scope, testData);
+      const languageId = this.getLanguageId(scope === null ? undefined : scope);
 
       const sectionParts = section === undefined ? [] : section.split(".");
 
@@ -39,21 +40,21 @@ export class WorkspaceConfigurationStubber implements Stubber {
   }
 
   cleanup(): void {}
-}
 
-function getLanguageId(scope: vscode.ConfigurationScope | undefined, td: TestData): string | undefined {
-  if (!scope) {
-    return;
+  private getLanguageId(scope: vscode.ConfigurationScope | undefined): string | undefined {
+    if (!scope) {
+      return;
+    }
+
+    const languageScope = scope as { languageId: string };
+    if (languageScope.languageId) {
+      return languageScope.languageId;
+    }
+
+    const msg = `Only languageId is supported for ConfigurationScope; got ${JSONStringify(scope)}`;
+    this.error = msg;
+    throw new Error(msg);
   }
-
-  const languageScope = scope as { languageId: string };
-  if (languageScope.languageId) {
-    return languageScope.languageId;
-  }
-
-  const msg = `Only languageId is supported for ConfigurationScope; got ${JSONStringify(scope)}`;
-  td.error = msg;
-  throw new Error(msg);
 }
 
 export const CONFIGURATION_TARGET_ORDER = [

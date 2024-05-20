@@ -1,6 +1,6 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
-import { Stubber, assertUndefined } from './verify';
+import { Stubber } from './verify';
 
 export interface InputBoxExecutionOptions extends Omit<vscode.InputBoxOptions, "validateInput">{
   /**
@@ -24,6 +24,11 @@ export interface InputBoxExecution {
 export class InputBoxStubber implements Stubber {
 
   /**
+   * The name of the stubber.
+   */
+  name: string = "InputBoxStubber";
+
+  /**
    * The input box responses to return.
    */
   private inputBoxResponses: (string | undefined)[];
@@ -41,7 +46,7 @@ export class InputBoxStubber implements Stubber {
   /**
    * Any stubbing errors that occurred during execution.
    */
-  private error?: string;
+  error?: string;
 
   constructor(responses?: (string | undefined)[], expectedExecutions?: InputBoxExecution[]) {
     this.inputBoxExecutions = [];
@@ -72,7 +77,6 @@ export class InputBoxStubber implements Stubber {
   }
 
   verify(): void {
-    assertUndefined(this.error, "InputBoxStubber.error");
     assert.deepStrictEqual(this.inputBoxExecutions, this.expectedInputBoxExecutions, "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal");
     assert.deepStrictEqual(this.inputBoxResponses.slice(this.inputBoxExecutions.length), [], "Unused inputBoxResponses");
   }

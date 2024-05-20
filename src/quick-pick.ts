@@ -1,7 +1,7 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
 import { UserInteraction } from './test-case';
-import { Stubber, classless, testData } from './verify';
+import { Stubber, assertUndefined, classless } from './verify';
 
 let realQuickPickFn: <T extends vscode.QuickPickItem> () => vscode.QuickPick<T>;
 
@@ -10,9 +10,11 @@ interface CurrentQuickPick {
 }
 
 const currentQuickPick: CurrentQuickPick = {};
+let globalQuickPickError: string | undefined = undefined;
 
 export class QuickPickStubber implements Stubber {
 
+  name: string = "QuickPickStubber";
   gotQuickPicks: vscode.QuickPickItem[][];
   currentQuickPick?: FakeQuickPick<any>;
   error?: string;
@@ -32,9 +34,8 @@ export class QuickPickStubber implements Stubber {
     vscode.window.createQuickPick = () => new FakeQuickPick(this, realQuickPickFn());
   }
 
-  // TODO: Add cleanup method to unset the global currentQuickPick variable.
-
   verify(): void {
+    assertUndefined(globalQuickPickError, this.name);
     const wantQuickPickOptions = this.expectedExecutions.map((value: (string | vscode.QuickPickItem)[], index: number, array: (string | vscode.QuickPickItem)[][]) => {
       return value.map((s: string | vscode.QuickPickItem) => {
 
@@ -50,7 +51,10 @@ export class QuickPickStubber implements Stubber {
     assert.deepStrictEqual(classless(this.gotQuickPicks), classless(wantQuickPickOptions), "Expected QUICK PICK OPTIONS to be exactly equal");
   }
 
-  cleanup(): void {}
+  cleanup(): void {
+    globalQuickPickError = undefined;
+    currentQuickPick.quickPick = undefined;
+  }
 }
 
 
@@ -68,8 +72,8 @@ export abstract class QuickPickAction implements UserInteraction {
 
   async do(): Promise<any> {
     if (!currentQuickPick.quickPick) {
-      const msg = 'No active quick pick';
-      testData.error = msg;
+      // We don't have access to a global value here, so
+      globalQuickPickError = `Trying to run QuickPickAction when there isn't an active QuickPick available`;
       return;
     }
 
@@ -100,7 +104,7 @@ export class SelectItemQuickPickAction extends QuickPickAction {
     }
 
     if (matchedItems.length !== this.itemLabels.length) {
-      testData.error = `All item labels were not matched. Found [${matchedItems.map(item => item.label)}]; wanted [${this.itemLabels}]`;
+      qp.stubber.error = `All item labels were not matched. Found [${matchedItems.map(item => item.label)}]; wanted [${this.itemLabels}]`;
       return;
     }
 
@@ -142,14 +146,14 @@ export class PressItemButtonQuickPickAction extends QuickPickAction {
 
       const button = item.buttons?.at(this.buttonIndex);
       if (!button) {
-        testData.error = `Item only has ${item.buttons?.length}, but needed at least ${this.buttonIndex+1}`;
+        qp.stubber.error = `Item only has ${item.buttons?.length}, but needed at least ${this.buttonIndex+1}`;
         return;
       }
 
       return qp.pressItemButton(item, button);
     }
 
-    testData.error = `No items matched the provided item label (${this.itemLabel})`;
+    qp.stubber.error = `No items matched the provided item label (${this.itemLabel})`;
     return;
   }
 }
@@ -176,7 +180,7 @@ export class PressUnknownButtonQuickPickAction extends QuickPickAction {
       return qp.pressItemButton(item, unknownButton);
     }
 
-    testData.error = `No items matched the provided item label (${this.itemLabel})`;
+    qp.stubber.error = `No items matched the provided item label (${this.itemLabel})`;
     return;
   }
 }
@@ -194,7 +198,7 @@ class FakeQuickInputButton implements vscode.QuickInputButton {
 
 export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.QuickPick<T> {
 
-  private readonly stubber: QuickPickStubber;
+  readonly stubber: QuickPickStubber;
   private readonly realQuickPick: vscode.QuickPick<T>;
 
   private readonly acceptHandlers: ((e: void) => Promise<any>)[];
