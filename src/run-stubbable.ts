@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as vscode from 'vscode';
-import { InputBoxExecution } from './input-box';
 import { replacer, reviver } from './workspace-configuration';
 
 // STUBBABLE_TEST_FILE_PATH is the path to the file to which stubbable data is written.
@@ -22,16 +21,6 @@ export interface StubbablesConfig {
    * The expected set of error messages to be displayed.
    */
   expectedErrorMessages?: string[];
-
-  /**
-   * The input box responses to return.
-   */
-  inputBoxResponses?: (string | undefined)[];
-
-  /**
-   * The expected input box executions.
-   */
-  expectedInputBoxes?: InputBoxExecution[];
 }
 
 // StubbablesConfigInternal is an internal model used for storing additional fields required for testing.

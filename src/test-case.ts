@@ -2,9 +2,10 @@ import assert from 'assert';
 import * as vscode from 'vscode';
 
 import path from 'path';
+import { InputBoxExecution, InputBoxStubber } from './input-box';
 import { QuickPickStubber } from './quick-pick';
 import { StubbablesConfig } from './run-stubbable';
-import { Stubber, testSetup, testVerify } from './verify';
+import { Stubber, assertDefined, assertUndefined, testSetup, testVerify } from './verify';
 import { WorkspaceConfiguration, WorkspaceConfigurationStubber } from './workspace-configuration';
 
 export interface UserInteraction {
@@ -82,6 +83,16 @@ export interface SimpleTestCaseProps {
   expectedQuickPicks?: (vscode.QuickPickItem | string)[][];
 
   /**
+   * The input box responses.
+   */
+  inputBoxResponses?: (string | undefined)[];
+
+  /**
+   * The expected input box executions.
+   */
+  expectedInputBoxes?: InputBoxExecution[];
+
+  /**
    * expectedText is the expected text that is present in the active text editor.
    * If undefined, then the test asserts that there is no active editor.
    *
@@ -131,6 +142,7 @@ export class SimpleTestCase implements TestCase {
     const stubbers: Stubber[] = [
       new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration),
       new QuickPickStubber(this.props.expectedQuickPicks),
+      new InputBoxStubber(this.props.inputBoxResponses, this.props.expectedInputBoxes),
     ];
 
     testSetup(stubbableTestFile, stubbers, sc);
@@ -154,13 +166,4 @@ export class SimpleTestCase implements TestCase {
       assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections || [new vscode.Selection(0, 0, 0, 0)], "Expected SELECTIONS to be exactly equal");
     }
   }
-}
-
-function assertDefined<T>(t: T | undefined, objectName: string): T {
-  assert.notEqual(t, undefined, `Expected ${objectName} to be defined, but it was undefined`);
-  return t!;
-}
-
-function assertUndefined<T>(t: T | undefined, objectName: string) {
-  assert.equal(t, undefined, `Expected ${objectName} to be undefined, but it was defined: ${t}`);
 }

@@ -1,7 +1,6 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
-import { StubbablesConfigInternal } from './run-stubbable';
-import { TestData } from './verify';
+import { Stubber, assertUndefined } from './verify';
 
 export interface InputBoxExecutionOptions extends Omit<vscode.InputBoxOptions, "validateInput">{
   /**
@@ -22,21 +21,61 @@ export interface InputBoxExecution {
   validationMessage?: (string | vscode.InputBoxValidationMessage);
 }
 
-export function inputBoxSetup(sc: StubbablesConfigInternal, td: TestData) {
-  vscode.window.showInputBox = async (options?: vscode.InputBoxOptions, token?: vscode.CancellationToken) => {
-    if (!sc.inputBoxResponses || sc.inputBoxResponses.length === 0) {
-      td.error = "Ran out of inputBoxResponses";
-      return undefined;
-    }
+export class InputBoxStubber implements Stubber {
 
-    const response = sc.inputBoxResponses!.shift()!;
+  /**
+   * The input box responses to return.
+   */
+  private inputBoxResponses: (string | undefined)[];
 
-    const validationMessage = options?.validateInput ? await options.validateInput(response) : undefined;
+  /**
+   * The input box executions made during the test
+   */
+  private expectedInputBoxExecutions: InputBoxExecution[];
 
-    td.inputBoxes.push(createExecution(validationMessage, options));
+  /**
+   * The input box executions actually made during the test
+   */
+  private inputBoxExecutions: InputBoxExecution[];
 
-    return validationMessage ? undefined : response;
-  };
+  /**
+   * Any stubbing errors that occurred during execution.
+   */
+  private error?: string;
+
+  constructor(responses?: (string | undefined)[], expectedExecutions?: InputBoxExecution[]) {
+    this.inputBoxExecutions = [];
+    this.inputBoxResponses = responses || [];
+    this.expectedInputBoxExecutions = expectedExecutions || [];
+  }
+
+  oneTimeSetup(): void {
+
+  }
+
+  setup(): void {
+    vscode.window.showInputBox = async (options?: vscode.InputBoxOptions, token?: vscode.CancellationToken) => {
+      // Need to check length because sometimes array values can be undefined. (TODO: Add test for this)
+      if (this.inputBoxResponses.length === 0) {
+        this.error = "Ran out of inputBoxResponses";
+        return undefined;
+      }
+
+      const response = this.inputBoxResponses.shift();
+
+      const validationMessage = options?.validateInput ? await options.validateInput(response || "") : undefined;
+
+      this.inputBoxExecutions.push(createExecution(validationMessage, options));
+
+      return validationMessage ? undefined : response;
+    };
+  }
+
+  verify(): void {
+    assertUndefined(this.error, "InputBoxStubber.error");
+    assert.deepStrictEqual(this.inputBoxExecutions, this.expectedInputBoxExecutions, "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal");
+    assert.deepStrictEqual(this.inputBoxResponses.slice(this.inputBoxExecutions.length), [], "Unused inputBoxResponses");
+  }
 }
 
 function createExecution(validationMessage?: string | vscode.InputBoxValidationMessage | null, options?: vscode.InputBoxOptions): InputBoxExecution {
@@ -64,9 +103,4 @@ function createExecutionOptions(options?: vscode.InputBoxOptions): InputBoxExecu
     ...relevantOptions,
     validateInputProvided: validateInput !== undefined,
   };
-}
-
-export function verifyInputBox(sc: StubbablesConfigInternal, td: TestData) {
-  assert.deepStrictEqual(td.inputBoxes, sc.expectedInputBoxes || [], "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal");
-  assert.deepStrictEqual((sc.inputBoxResponses || []).slice(td.inputBoxes.length), [], "Unused inputBoxResponses");
 }

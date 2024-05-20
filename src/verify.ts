@@ -1,7 +1,6 @@
 import assert from "assert";
 import { readFileSync, writeFileSync } from "fs";
 import * as vscode from 'vscode';
-import { InputBoxExecution, inputBoxSetup, verifyInputBox } from "./input-box";
 import { JSONParse, JSONStringify, StubbablesConfig, StubbablesConfigInternal } from "./run-stubbable";
 
 // TODO: Try to move StubbablesConfigInternal data inside of TestData object
@@ -13,11 +12,6 @@ export interface TestData {
   errorMessages: string[];
 
   /**
-   * The input box executions made during the test
-   */
-  inputBoxes: InputBoxExecution[];
-
-  /**
    * If any stub-related error occurred during the test.
    */
   error?: string;
@@ -26,7 +20,6 @@ export interface TestData {
 export const testData: TestData = {
   infoMessages: [],
   errorMessages: [],
-  inputBoxes: [],
 };
 
 export interface Stubber/*<T>*/ {
@@ -77,14 +70,11 @@ export function testSetup(stubbableTestFile: string, stubbers: Stubber[], config
   // Stub out message functions
   testData.infoMessages = [];
   testData.errorMessages = [];
-  testData.inputBoxes = [];
   testData.error = undefined;
 
   oneTimeSetup(mustStubbers);
 
   mustStubbers.forEach(stubber => stubber.setup());
-
-  inputBoxSetup(internalCfg, testData);
 }
 
 
@@ -99,8 +89,6 @@ export function testVerify(stubbableTestFile: string, stubbers: Stubber[]) {
   assert.deepStrictEqual(testData.errorMessages, finalConfig.expectedErrorMessages || [], "Expected ERROR MESSAGES to be exactly equal");
   assert.deepStrictEqual(testData.infoMessages, finalConfig.expectedInfoMessages || [], "Expected INFO MESSAGES to be exactly equal");
 
-  verifyInputBox(finalConfig, testData);
-
   mustStubbers.forEach(stubber => stubber.verify());
 }
 
@@ -113,6 +101,11 @@ export function classlessMap(obj: any) {
   return JSONParse(JSONStringify(obj));
 }
 
-function assertUndefined<T>(t: T | undefined, objectName: string) {
+export function assertDefined<T>(t: T | undefined, objectName: string): T {
+  assert.notEqual(t, undefined, `Expected ${objectName} to be defined, but it was undefined`);
+  return t!;
+}
+
+export function assertUndefined<T>(t: T | undefined, objectName: string) {
   assert.equal(t, undefined, `Expected ${objectName} to be undefined, but it was defined: ${t}`);
 }

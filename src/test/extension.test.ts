@@ -22,6 +22,10 @@ function qpe(...items: Item[]): vscode.QuickPickItem[] {
   return items;
 }
 
+function ipo(opt: vscode.InputBoxOptions): vscode.InputBoxOptions {
+  return opt;
+}
+
 function btn(...bs: CustomButton[]): vscode.QuickInputButton[] {
   return bs;
 }
@@ -263,6 +267,227 @@ const testCases: TestCase[] = [
         new PressItemButtonQuickPickAction('ghi', 1),
       ],
       expectedQuickPicks: [basicQPE()],
+    },
+  },
+  // Input box tests
+  {
+    name: "[InputBox] Handles no input box options",
+    sc: {
+      expectedInfoMessages: [
+        `Got input box response: start`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox'),
+      ],
+      inputBoxResponses: ["start"],
+      expectedInputBoxes: [{
+        options: undefined,
+      }]
+    },
+  },
+  {
+    name: "[InputBox] Handles null input box response",
+    sc: {
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          prompt: "Nada",
+        })),
+      ],
+      inputBoxResponses: [undefined],
+      expectedInputBoxes: [{
+        options: {
+          prompt: "Nada",
+          validateInputProvided: false,
+        },
+      }]
+    },
+  },
+  {
+    name: "[InputBox] Handles string input box response",
+    sc: {
+      expectedInfoMessages: [
+        `Got input box response: some response`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "An input box",
+        })),
+      ],
+      inputBoxResponses: ["some response"],
+      expectedInputBoxes: [{
+        options: {
+          title: "An input box",
+          validateInputProvided: false,
+        },
+      }]
+    },
+  },
+  {
+    name: "[InputBox] Compares all fields in options",
+    sc: {
+      expectedInfoMessages: [
+        `Got input box response: another response`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "An input box",
+          ignoreFocusOut: true,
+          password: true,
+          placeHolder: "ph",
+          prompt: "prmpt",
+          validateInput: () => undefined,
+        })),
+      ],
+      inputBoxResponses: ["another response"],
+      expectedInputBoxes: [{
+        options: {
+          title: "An input box",
+          ignoreFocusOut: true,
+          password: true,
+          placeHolder: "ph",
+          prompt: "prmpt",
+          validateInputProvided: true,
+        },
+      }]
+    },
+  },
+  {
+    name: "[InputBox] Returns undefined for invalid input (string input)",
+    sc: {
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "An input box",
+          validateInput: (s) => {
+            if (s.length <= 3) {
+              return {
+                message: "String is too short",
+                severity: vscode.InputBoxValidationSeverity.Warning,
+              };
+            }
+          },
+        })),
+      ],
+      inputBoxResponses: ["abc"],
+      expectedInputBoxes: [{
+        options: {
+          title: "An input box",
+          validateInputProvided: true,
+        },
+        validationMessage: {
+          message: "String is too short",
+          severity: vscode.InputBoxValidationSeverity.Warning,
+        },
+      }]
+    },
+  },
+  {
+    name: "[InputBox] Returns undefined for invalid input (undefined input)",
+    sc: {
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "An input box",
+          validateInput: (s) => {
+            if (s.length <= 3) {
+              return {
+                message: "String is too short",
+                severity: vscode.InputBoxValidationSeverity.Warning,
+              };
+            }
+          },
+        })),
+      ],
+      inputBoxResponses: [undefined],
+      expectedInputBoxes: [{
+        options: {
+          title: "An input box",
+          validateInputProvided: true,
+        },
+        validationMessage: {
+          message: "String is too short",
+          severity: vscode.InputBoxValidationSeverity.Warning,
+        },
+      }]
+    },
+  },
+  {
+    name: "[InputBox] Returns string for valid input (string input)",
+    sc: {
+      expectedInfoMessages: [
+        `Got input box response: abc`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "An input box",
+          validateInput: (s) => {
+            if (s.length > 3) {
+              return {
+                message: "String is too long",
+                severity: vscode.InputBoxValidationSeverity.Info,
+              };
+            }
+          },
+        })),
+      ],
+      inputBoxResponses: ["abc"],
+      expectedInputBoxes: [{
+        options: {
+          title: "An input box",
+          validateInputProvided: true,
+        },
+      }]
+    },
+  },
+  {
+    name: "[InputBox] Returns undefined for valid input (undefined input)",
+    sc: {
+      expectedInfoMessages: [
+        `Got undefined input box response`,
+      ]
+    },
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "An input box",
+          validateInput: (s) => {
+            if (s !== "") {
+              return {
+                message: "Expected undefined to get mapped to the empty string for validation function input",
+                severity: vscode.InputBoxValidationSeverity.Error,
+              };
+            }
+          },
+        })),
+      ],
+      inputBoxResponses: [undefined],
+      expectedInputBoxes: [{
+        options: {
+          title: "An input box",
+          validateInputProvided: true,
+        },
+      }]
     },
   },
   /* Useful for commenting out tests. */

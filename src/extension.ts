@@ -11,6 +11,14 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('vscode-test-stubber.updateSettings', async () => {
       await vscode.workspace.getConfiguration("stubber").update("some-key", "some-value");
     }),
+    vscode.commands.registerCommand('vscode-test-stubber.inputBox', async (options?: vscode.InputBoxOptions) => {
+      const response = await vscode.window.showInputBox(options);
+      if (response === undefined) {
+        vscode.window.showInformationMessage(`Got undefined input box response`);
+      } else {
+        vscode.window.showInformationMessage(`Got input box response: ${response}`);
+      }
+    }),
     vscode.commands.registerCommand('vscode-test-stubber.quickPick', async () => {
       const items: Item[] = [
         {
