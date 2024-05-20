@@ -64,11 +64,8 @@ export class QuickPickStubber implements Stubber {
 ********************/
 
 export abstract class QuickPickAction implements UserInteraction {
-  // Run the quick pick action, or return an error
-  // It returns [string|undefined, Thenable<any>] because when initially had Thenable<string | undefined>,
-  // the error wasn't being set properly in the stubbables method.
-  // abstract run(qp: vscode.QuickPick<vscode.QuickPickItem>): [string | undefined, Thenable<any>];
-  abstract run(fqp: FakeQuickPick<vscode.QuickPickItem>): Promise<any>;
+  // Run the quick pick action. Any errors should simple be set in the qp.stubber.error field
+  abstract run(qp: FakeQuickPick<vscode.QuickPickItem>): Promise<any>;
 
   async do(): Promise<any> {
     if (!currentQuickPick.quickPick) {

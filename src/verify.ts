@@ -25,7 +25,7 @@ function oneTimeSetup(stubbers: Stubber[]) {
 /**
  * Setup the stubs for use in the test.
  *
- * @param stubbableTestFile the path to the stubbables test file
+ * @param stubbers the set of stubbers to use
  */
 export function testSetup(stubbers: Stubber[]) {
   const mustStubbers = stubbers || [];
