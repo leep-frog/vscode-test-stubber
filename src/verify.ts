@@ -12,7 +12,7 @@ export interface Stubber {
 
 let didOneTime = false;
 
-function oneTimeSetup(stubbers: Stubber[]) {
+export function oneTimeSetup(stubbers: Stubber[]) {
   if (didOneTime) {
     return;
   }
