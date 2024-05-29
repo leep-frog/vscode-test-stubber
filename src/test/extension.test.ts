@@ -3,7 +3,7 @@
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
-import { PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectItemQuickPickAction } from '../quick-pick';
+import { PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
 import { SimpleTestCase, SimpleTestCaseProps, cmd } from '../test-case';
 // import * as myExtension from '../../extension';
 
@@ -239,6 +239,101 @@ const testCases: TestCase[] = [
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction(['DEF']),
+      ],
+      expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (1) [DEF]',
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] Select no active items",
+    runSolo: true,
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick'),
+        new SelectActiveItems(),
+      ],
+      expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (0) []',
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] Select one active item",
+    runSolo: true,
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick', {
+          activeItems: [2],
+        }),
+        new SelectActiveItems(),
+      ],
+      expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (1) [ghi]',
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] Select multiple active items",
+    runSolo: true,
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick', {
+          activeItems: [0, 2],
+        }),
+        new SelectActiveItems(),
+      ],
+      expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (2) [abc_ghi]',
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] Select all items in order",
+    runSolo: true,
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick', {
+          activeItems: [0, 1, 2],
+        }),
+        new SelectActiveItems(),
+      ],
+      expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (3) [abc_DEF_ghi]',
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] Select all items not in order",
+    runSolo: true,
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick', {
+          activeItems: [2, 0, 1],
+        }),
+        new SelectActiveItems(),
+      ],
+      expectedQuickPicks: [basicQPE()],
+      expectedInfoMessages: [
+        'Picked items (3) [ghi_abc_DEF]',
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] Select one active item after move",
+    runSolo: true,
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick', {
+          activeItems: [2],
+        }),
+        cmd('workbench.action.quickOpenNavigatePreviousInFilePicker'),
+        new SelectActiveItems(),
       ],
       expectedQuickPicks: [basicQPE()],
       expectedInfoMessages: [

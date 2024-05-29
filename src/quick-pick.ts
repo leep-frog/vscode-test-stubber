@@ -109,6 +109,16 @@ export class SelectItemQuickPickAction extends QuickPickAction {
   }
 }
 
+/*********************
+ * SelectActiveItems *
+**********************/
+
+export class SelectActiveItems extends QuickPickAction {
+  async run(qp: FakeQuickPick<vscode.QuickPickItem>): Promise<any> {
+    return qp.acceptItems([...qp.activeItems]);
+  }
+}
+
 /************************
  * CloseQuickPickAction *
 *************************/

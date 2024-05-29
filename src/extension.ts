@@ -2,6 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
+interface QuickPickOptions {
+  activeItems?: number[];
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -22,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage(`Got input box response: ${response}`);
       }
     }),
-    vscode.commands.registerCommand('vscode-test-stubber.quickPick', async () => {
+    vscode.commands.registerCommand('vscode-test-stubber.quickPick', async (options?: QuickPickOptions) => {
       const items: Item[] = [
         {
           label: 'abc',
@@ -48,6 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       const qp = vscode.window.createQuickPick<Item>();
       qp.items = items;
+      qp.activeItems = options?.activeItems?.map(index => items[index]) || [];
 
       const disposables: vscode.Disposable[] = [];
       disposables.push(
