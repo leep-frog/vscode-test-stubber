@@ -16,7 +16,7 @@ export abstract class Waiter implements UserInteraction {
 
   abstract readonly delayIntervalMs: number;
 
-  abstract done(): Promise<boolean>;
+  abstract done(): boolean;
 
   async do(): Promise<any> {
     while (!this.done()) {
