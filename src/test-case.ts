@@ -12,6 +12,19 @@ export interface UserInteraction {
   do(): Promise<any>;
 }
 
+export abstract class Waiter implements UserInteraction {
+
+  abstract readonly delayIntervalMs: number;
+
+  abstract done(): Promise<boolean>;
+
+  async do(): Promise<any> {
+    while (!this.done()) {
+      await delay(this.delayIntervalMs).do();
+    }
+  }
+}
+
 class CommandExecution implements UserInteraction {
   constructor(
     public command: string,
