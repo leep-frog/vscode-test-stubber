@@ -12,11 +12,15 @@ export interface UserInteraction {
   do(): Promise<any>;
 }
 
-export abstract class Waiter implements UserInteraction {
+export class Waiter {
 
-  abstract readonly delayIntervalMs: number;
+  readonly delayIntervalMs: number;
+  done: () => boolean;
 
-  abstract done(): boolean;
+  constructor(delayIntervalMs: number, done: () => boolean) {
+    this.delayIntervalMs = delayIntervalMs;
+    this.done = done;
+  }
 
   async do(): Promise<any> {
     while (!this.done()) {
