@@ -2,7 +2,7 @@
   "name": "@leep-frog/vscode-test-stubber",
   "displayName": "vscode-test-stubber",
   "description": "",
-  "version": "1.11.7",
+  "version": "1.12.0",
   "publisher": "groogle",
   "license": "MIT",
   "engines": {
@@ -77,9 +77,5 @@
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^8.57.0",
     "typescript": "^5.4.5"
-  },
-  "dependencies": {
-    "earl": "^1.2.1",
-    "mapify-ts": "^0.0.2"
   }
 }
