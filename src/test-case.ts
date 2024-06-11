@@ -87,6 +87,11 @@ export interface TestCase {
 
 export interface SimpleTestCaseProps {
   /**
+  * The user interactions to run during the test.
+  */
+  userInteractions?: UserInteraction[];
+
+  /**
    * If set, the test is started with an unnamed file with the provided text (separated by newlines).
    */
   text?: string[];
@@ -97,9 +102,12 @@ export interface SimpleTestCaseProps {
   file?: string;
 
   /**
-   * The user interactions to run during the test.
-   */
-  userInteractions?: UserInteraction[];
+  * expectedText is the expected text that is present in the active text editor.
+  * If undefined, then the test asserts that there is no active editor.
+  *
+  * TODO: Make this string[] | string
+  */
+  expectedText?: string[];
 
   /**
    * The selections that will start during the test.
@@ -150,14 +158,6 @@ export interface SimpleTestCaseProps {
    * The expected input box executions.
    */
   expectedInputBoxes?: InputBoxExecution[];
-
-  /**
-   * expectedText is the expected text that is present in the active text editor.
-   * If undefined, then the test asserts that there is no active editor.
-   *
-   * TODO: Make this string[] | string
-   */
-  expectedText?: string[];
 };
 
 /**
