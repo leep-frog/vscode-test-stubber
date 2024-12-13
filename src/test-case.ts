@@ -33,14 +33,14 @@ class CommandExecution implements UserInteraction {
   constructor(
     public command: string,
     public args?: any[],
-  ) {}
+  ) { }
 
   async do() {
     return vscode.commands.executeCommand(this.command, ...(this.args || []));
   };
 }
 
-export function cmd(command: string, ...args: any[]) : UserInteraction {
+export function cmd(command: string, ...args: any[]): UserInteraction {
   return new CommandExecution(command, args);
 }
 
@@ -57,17 +57,40 @@ class OpenFileExecution implements UserInteraction {
   };
 }
 
-export function openFile(...filepath: string[]) : UserInteraction {
+export function openFile(...filepath: string[]): UserInteraction {
   return new OpenFileExecution(...filepath);
 }
+
+// class OpenNotebookExecution implements UserInteraction {
+
+//   readonly filepath: string[];
+
+//   constructor(...filepath: string[]) {
+//     this.filepath = filepath;
+//   }
+
+//   async do() {
+//     // await vscode.commands.executeCommand("vscode.openWith", vscode.Uri.file(path.join(...this.filepath)), 'jupyter-notebook');
+
+//     // This works normally, but not in test mode.
+//     // See https://github.com/microsoft/vscode-test-cli/issues/63
+//     const u = vscode.Uri.file(path.join(...this.filepath));
+//     const nb = await vscode.workspace.openNotebookDocument(u);
+//     await vscode.window.showNotebookDocument(nb);
+//   };
+// }
+
+// export function openNotebook(...filepath: string[]): UserInteraction {
+//   return new OpenNotebookExecution(...filepath);
+// }
 
 class DelayExecution implements UserInteraction {
   constructor(
     public waitMs: number,
-  ) {}
+  ) { }
 
   delay() {
-    return new Promise( resolve => setTimeout(resolve, this.waitMs) );
+    return new Promise(resolve => setTimeout(resolve, this.waitMs));
   }
 
   async do() {
@@ -77,6 +100,22 @@ class DelayExecution implements UserInteraction {
 
 export function delay(ms: number): UserInteraction {
   return new DelayExecution(ms);
+}
+
+class MultiInteraction implements UserInteraction {
+  constructor(
+    public userInteractions: UserInteraction[],
+  ) { }
+
+  async do() {
+    for (const userInteraction of this.userInteractions) {
+      await userInteraction.do();
+    }
+  }
+}
+
+export function combineInteractions(...userInteractions: UserInteraction[]) {
+  return new MultiInteraction(userInteractions);
 }
 
 const closeAllEditors = cmd("workbench.action.closeEditorsAndGroup");
@@ -184,7 +223,7 @@ export class SimpleTestCase implements TestCase {
 
       const editor_ = assertDefined(vscode.window.activeTextEditor, "vscode.window.activeTextEditor");
       await editor_.edit(eb => {
-        const line = editor_.document.lineAt(editor_.document.lineCount-1);
+        const line = editor_.document.lineAt(editor_.document.lineCount - 1);
         eb.delete(new vscode.Range(
           new vscode.Position(0, 0),
           new vscode.Position(line.lineNumber, line.text.length),

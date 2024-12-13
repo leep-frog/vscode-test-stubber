@@ -586,24 +586,31 @@ const testCases: TestCase[] = [
       ],
     },
   },
+  // Notebook tests
+  // {
+  //   name: "[QuickPick] Select multiple items",
+  //   runSolo: true,
+  //   stc: {
+  //     userInteractions: [
+  //       openNotebook(__dirname, "..", "..", "src", "test", "simple-notebook.ipynb"),
+  //       delay(20000),
+  //     ],
+  //   },
+  // },
   /* Useful for commenting out tests. */
 ];
 
 suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+  vscode.window.showInformationMessage('Start all tests.');
 
   const solo = testCases.some(tc => tc.runSolo);
 
-  testCases.forEach(tc => {
-
-    if (solo && !tc.runSolo) {
-      return;
-    }
+  testCases.filter(tc => !solo || tc.runSolo).forEach(tc => {
 
     test(tc.name, async () => {
       await new SimpleTestCase(tc.stc).runTest().catch(e => {
         throw e;
       });
     });
-	});
+  });
 });
