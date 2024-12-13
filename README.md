@@ -138,3 +138,4 @@ import { cmd, delay, Waiter } from "@leep-frog/vscode-test-stubber";
   are normally executed via `vscode.commands.executeCommand(cmd, ...args)`
 - `Waiter(delayMs, doneFunc)`: This is a class that continually calls doneFunc (ever `delayMs`) until it returns true. This is super useful if your extension has async logic that can take a while.
 - `delay(timeInMs)`: This simply waits for the specified amount of time (in case you need to wait for an async operation), although it's use is **not encouraged** (see `Waiter` for a better alternative)
+- `combineInteractions(...UserInteraction)`: Return a single `UserInteraction` object that runs and waits on all provideed `UserInteraction` objects.
