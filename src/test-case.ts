@@ -174,19 +174,34 @@ export interface SimpleTestCaseProps {
   expectedErrorMessages?: string[];
 
   /**
+  * If true, messages will not be stubbed.
+  */
+  skipMessages?: boolean;
+
+  /**
    * The starting workspace configuration.
    */
   workspaceConfiguration?: WorkspaceConfiguration;
 
   /**
-   * The expected workspace configuration after all user interactions are run.
-   */
+  * The expected workspace configuration after all user interactions are run.
+  */
   expectedWorkspaceConfiguration?: WorkspaceConfiguration;
+
+  /**
+  * If true, workspace configuration will not be stubbed.
+  */
+  skipWorkspaceConfiguration?: boolean;
 
   /**
    * The expected quick pick interactions to have been executed during the test.
    */
   expectedQuickPicks?: (vscode.QuickPickItem | string)[][];
+
+  /**
+  * If true, quick picks will not be stubbed.
+  */
+  skipQuickPicks?: boolean;
 
   /**
    * The input box responses.
@@ -197,6 +212,11 @@ export interface SimpleTestCaseProps {
    * The expected input box executions.
    */
   expectedInputBoxes?: InputBoxExecution[];
+
+  /**
+  * If true, input boxes will not be stubbed.
+  */
+  skipInputBoxes?: boolean;
 };
 
 /**
@@ -241,9 +261,11 @@ export class SimpleTestCase implements TestCase {
       editor.selections = (this.props.selections || [new vscode.Selection(0, 0, 0, 0)]);
     }
 
+    // TODO: Add skips for other types
+
     const stubbers: Stubber[] = [
       // TODO: Determine best order in which to verify these.
-      new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration),
+      new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration, this.props.skipWorkspaceConfiguration),
       new QuickPickStubber(this.props.expectedQuickPicks),
       new InputBoxStubber(this.props.inputBoxResponses, this.props.expectedInputBoxes),
       new ErrorMessageStubber(...(this.props.expectedErrorMessages || [])),

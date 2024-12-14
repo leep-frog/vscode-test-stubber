@@ -11,6 +11,7 @@ abstract class MessageStubber implements Stubber {
   private readonly messages: string[] = [];
   private readonly expectedMessages: string[];
   error?: string;
+  skip: boolean;
 
   abstract readonly messageName: string;
   abstract readonly originalFunc: <T extends string> (message: string, ...items: T[]) => Thenable<T | undefined>;
@@ -18,9 +19,10 @@ abstract class MessageStubber implements Stubber {
 
   constructor(...expectedMessages: string[]) {
     this.expectedMessages = expectedMessages;
+    this.skip = false;
   }
 
-  oneTimeSetup(): void {}
+  oneTimeSetup(): void { }
 
   setup(): void {
     this.setOriginalFunc(async (s: string): Promise<undefined> => {

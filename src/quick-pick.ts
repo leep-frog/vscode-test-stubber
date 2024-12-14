@@ -17,6 +17,7 @@ export class QuickPickStubber implements Stubber {
   name: string = "QuickPickStubber";
   gotQuickPicks: vscode.QuickPickItem[][];
   currentQuickPick?: FakeQuickPick<any>;
+  skip: boolean;
   error?: string;
 
   expectedExecutions: (vscode.QuickPickItem | string)[][];
@@ -24,6 +25,7 @@ export class QuickPickStubber implements Stubber {
   constructor(expectedExecutions?: (vscode.QuickPickItem | string)[][]) {
     this.gotQuickPicks = [];
     this.expectedExecutions = expectedExecutions || [];
+    this.skip = false;
   }
 
   oneTimeSetup(): void {
@@ -39,7 +41,7 @@ export class QuickPickStubber implements Stubber {
     const wantQuickPickOptions = this.expectedExecutions.map((value: (string | vscode.QuickPickItem)[], index: number, array: (string | vscode.QuickPickItem)[][]) => {
       return value.map((s: string | vscode.QuickPickItem) => {
 
-        if (typeof(s) === typeof("")) {
+        if (typeof (s) === typeof ("")) {
           return {
             label: s,
           } as vscode.QuickPickItem;
@@ -153,7 +155,7 @@ export class PressItemButtonQuickPickAction extends QuickPickAction {
 
       const button = item.buttons?.at(this.buttonIndex);
       if (!button) {
-        qp.stubber.error = `Item only has ${item.buttons?.length}, but needed at least ${this.buttonIndex+1}`;
+        qp.stubber.error = `Item only has ${item.buttons?.length}, but needed at least ${this.buttonIndex + 1}`;
         return;
       }
 
@@ -233,7 +235,7 @@ export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.Qui
   }
 
   public async pressItemButton(item: T, button: vscode.QuickInputButton): Promise<any> {
-    await this.runAsyncsInSequence({item, button}, this.itemButtonHandlers);
+    await this.runAsyncsInSequence({ item, button }, this.itemButtonHandlers);
   }
 
   private async runAsyncsInSequence<T>(t: T, handlers: ((t: T) => Promise<any>)[]): Promise<any> {
@@ -245,17 +247,17 @@ export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.Qui
   // QuickPick overridden fields/methods below
 
   // TODO: Support and test this
-  public onDidTriggerButton(listener: (e: vscode.QuickInputButton) => Promise<any>, thisArgs?: any, disposables?: vscode.Disposable[]) : vscode.Disposable {
+  public onDidTriggerButton(listener: (e: vscode.QuickInputButton) => Promise<any>, thisArgs?: any, disposables?: vscode.Disposable[]): vscode.Disposable {
     this.buttonHandlers.push(listener);
     return this.realQuickPick.onDidTriggerButton(listener, thisArgs, disposables);
   }
 
-  public onDidTriggerItemButton(listener: (e: vscode.QuickPickItemButtonEvent<T>) => Promise<any>, thisArgs?: any, disposables?: vscode.Disposable[]) : vscode.Disposable {
+  public onDidTriggerItemButton(listener: (e: vscode.QuickPickItemButtonEvent<T>) => Promise<any>, thisArgs?: any, disposables?: vscode.Disposable[]): vscode.Disposable {
     this.itemButtonHandlers.push(listener);
     return this.realQuickPick.onDidTriggerItemButton(listener, thisArgs, disposables);
   }
 
-  public onDidAccept(listener: (e: void) => Promise<any>, thisArgs?: any, disposables?: vscode.Disposable[]) : vscode.Disposable {
+  public onDidAccept(listener: (e: void) => Promise<any>, thisArgs?: any, disposables?: vscode.Disposable[]): vscode.Disposable {
     this.acceptHandlers.push(listener);
     return this.realQuickPick.onDidAccept(listener, thisArgs, disposables);
   }

@@ -12,17 +12,22 @@ export class WorkspaceConfigurationStubber implements Stubber {
   readonly name: string = "WorkspaceConfigurationStubber";
   readonly workspaceConfiguration: MustWorkspaceConfiguration;
   readonly expectedWorkspaceConfiguration: MustWorkspaceConfiguration;
+  readonly skip: boolean;
+  private readonly originalGetConfig: any;
   error?: string;
 
-  constructor(wc?: WorkspaceConfiguration, expectedWc?: WorkspaceConfiguration) {
+  constructor(wc?: WorkspaceConfiguration, expectedWc?: WorkspaceConfiguration, skip?: boolean) {
     this.workspaceConfiguration = mustWorkspaceConfiguration(wc);
     // TODO: Test update on existing config fails (since might need to deep copy the starting one).
     this.expectedWorkspaceConfiguration = mustWorkspaceConfiguration(expectedWc || wc);
+    this.skip = skip || false;
+    this.originalGetConfig = vscode.workspace.getConfiguration;
   }
 
-  oneTimeSetup(): void {}
+  oneTimeSetup(): void { }
 
   setup(): void {
+
     vscode.workspace.getConfiguration = (section: string | undefined, scope: vscode.ConfigurationScope | null | undefined) => {
 
       const languageId = this.getLanguageId(scope === null ? undefined : scope);
@@ -35,11 +40,16 @@ export class WorkspaceConfigurationStubber implements Stubber {
   }
 
   verify(): void {
+    if (this.skip) {
+      return;
+    }
     // TODO: This fails without classlessMap when comparing strongly typed settings with undefined fields. TODO is to add a test for this
     assert.deepStrictEqual(classlessMap(this.workspaceConfiguration), classlessMap(this.expectedWorkspaceConfiguration));
   }
 
-  cleanup(): void {}
+  cleanup(): void {
+    vscode.workspace.getConfiguration = this.originalGetConfig;
+  }
 
   private getLanguageId(scope: vscode.ConfigurationScope | undefined): string | undefined {
     if (!scope) {

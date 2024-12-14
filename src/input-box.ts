@@ -2,7 +2,7 @@ import assert from 'assert';
 import * as vscode from 'vscode';
 import { Stubber } from './verify';
 
-export interface InputBoxExecutionOptions extends Omit<vscode.InputBoxOptions, "validateInput">{
+export interface InputBoxExecutionOptions extends Omit<vscode.InputBoxOptions, "validateInput"> {
   /**
    * Whether or not the validateInput method was provided
    */
@@ -48,10 +48,13 @@ export class InputBoxStubber implements Stubber {
    */
   error?: string;
 
+  skip: boolean;
+
   constructor(responses?: (string | undefined)[], expectedExecutions?: InputBoxExecution[]) {
     this.inputBoxExecutions = [];
     this.inputBoxResponses = responses || [];
     this.expectedInputBoxExecutions = expectedExecutions || [];
+    this.skip = false;
   }
 
   oneTimeSetup(): void {
@@ -81,7 +84,7 @@ export class InputBoxStubber implements Stubber {
     assert.deepStrictEqual(this.inputBoxResponses.slice(this.inputBoxExecutions.length), [], "Unused inputBoxResponses");
   }
 
-  cleanup(): void {}
+  cleanup(): void { }
 }
 
 function createExecution(validationMessage?: string | vscode.InputBoxValidationMessage | null, options?: vscode.InputBoxOptions): InputBoxExecution {
@@ -104,7 +107,7 @@ function createExecutionOptions(options?: vscode.InputBoxOptions): InputBoxExecu
     return;
   }
 
-  const {validateInput, ...relevantOptions} = options;
+  const { validateInput, ...relevantOptions } = options;
   return {
     ...relevantOptions,
     validateInputProvided: validateInput !== undefined,

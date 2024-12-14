@@ -8,6 +8,7 @@ export interface Stubber {
   verify(): void;
   cleanup(): void;
   error?: string;
+  skip: boolean;
 }
 
 let didOneTime = false;
@@ -32,7 +33,11 @@ export function testSetup(stubbers: Stubber[]) {
 
   oneTimeSetup(mustStubbers);
 
-  mustStubbers.forEach(stubber => stubber.setup());
+  mustStubbers.forEach(stubber => {
+    if (!stubber.skip) {
+      stubber.setup();
+    }
+  });
 }
 
 
@@ -40,8 +45,10 @@ export function testVerify(stubbers: Stubber[]) {
   const mustStubbers = stubbers || [];
 
   mustStubbers.forEach(stubber => {
-    assertUndefined(stubber.error, `${stubber.name}.error`);
-    stubber.verify();
+    if (!stubber.skip) {
+      assertUndefined(stubber.error, `${stubber.name}.error`);
+      stubber.verify();
+    }
   });
 
 }
