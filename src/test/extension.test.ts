@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
 import { PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
-import { SimpleTestCase, SimpleTestCaseProps, cmd } from '../test-case';
+import { SimpleTestCase, SimpleTestCaseProps, Waiter, cmd } from '../test-case';
 // import * as myExtension from '../../extension';
 
 interface TestCase {
@@ -71,6 +71,44 @@ const testCases: TestCase[] = [
     stc: {
       userInteractions: [
         cmd("vscode-test-stubber.doNothing"),
+      ],
+    },
+  },
+  {
+    name: "Waiter stops checking after maxAttempts",
+    stc: {
+      userInteractions: [
+        new Waiter(1, () => {
+          vscode.window.showInformationMessage("waiter called");
+          return false;
+        }, 3),
+      ],
+      expectedInfoMessages: [
+        "waiter called",
+        "waiter called",
+        "waiter called",
+      ],
+    },
+  },
+  {
+    name: "Waiter stops after condition is met",
+    stc: {
+      userInteractions: [
+        (() => {
+          let count = 0;
+          return new Waiter(1, () => {
+            vscode.window.showInformationMessage("waiter called");
+            count++;
+            return count === 5;
+          });
+        })(),
+      ],
+      expectedInfoMessages: [
+        "waiter called",
+        "waiter called",
+        "waiter called",
+        "waiter called",
+        "waiter called",
       ],
     },
   },
@@ -248,7 +286,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select no active items",
-    runSolo: true,
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
@@ -262,7 +299,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select one active item",
-    runSolo: true,
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick', {
@@ -278,7 +314,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select multiple active items",
-    runSolo: true,
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick', {
@@ -294,7 +329,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select all items in order",
-    runSolo: true,
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick', {
@@ -310,7 +344,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select all items not in order",
-    runSolo: true,
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick', {
@@ -326,7 +359,6 @@ const testCases: TestCase[] = [
   },
   {
     name: "[QuickPick] Select one active item after move",
-    runSolo: true,
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.quickPick', {
@@ -589,7 +621,6 @@ const testCases: TestCase[] = [
   // Notebook tests
   // {
   //   name: "[QuickPick] Select multiple items",
-  //   runSolo: true,
   //   stc: {
   //     userInteractions: [
   //       openNotebook(__dirname, "..", "..", "src", "test", "simple-notebook.ipynb"),

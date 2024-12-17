@@ -12,18 +12,25 @@ export interface UserInteraction {
   do(): Promise<any>;
 }
 
+/**
+ * The Waiter class allows users to define custom `UserInteraction` objects
+ * that wait for a given condition to be met (which is sometimes needed as
+ * lots of VS Code operations execute asynchronously).
+ */
 export class Waiter {
 
   readonly delayIntervalMs: number;
   done: () => boolean;
+  maxAttempts?: number;
 
-  constructor(delayIntervalMs: number, done: () => boolean) {
+  constructor(delayIntervalMs: number, done: () => boolean, maxAttempts?: number) {
     this.delayIntervalMs = delayIntervalMs;
     this.done = done;
+    this.maxAttempts = maxAttempts;
   }
 
   async do(): Promise<any> {
-    while (!this.done()) {
+    for (let numCalls = 0; (this.maxAttempts === undefined || numCalls < this.maxAttempts) && !this.done(); numCalls++) {
       await delay(this.delayIntervalMs).do();
     }
   }
