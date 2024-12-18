@@ -5,7 +5,7 @@ import path from 'path';
 import { InputBoxExecution, InputBoxStubber } from './input-box';
 import { ErrorMessageStubber, InfoMessageStubber, WarningMessageStubber } from './messages';
 import { QuickPickStubber } from './quick-pick';
-import { Stubber, assertDefined, assertUndefined, testSetup, testVerify } from './verify';
+import { Stub, StubInfo, assertDefined, assertUndefined, testCleanup, testSetup, testVerify } from './verify';
 import { WorkspaceConfiguration, WorkspaceConfigurationStubber } from './workspace-configuration';
 
 export interface UserInteraction {
@@ -131,10 +131,58 @@ export interface TestCase {
   runTest(): Promise<void>;
 };
 
+export interface MessageStub extends Stub {
+
+  /**
+   * If true, then ignore the order of notification messages displayed when verifying.
+   */
+  ignoreOrder?: boolean;
+
+  /**
+  * The expected messages to have been displayed during the test.
+  */
+  expectedMessages?: string[];
+}
+
+export interface InformationMessageStub extends MessageStub { }
+export interface WarningMessageStub extends MessageStub { }
+export interface ErrorMessageStub extends MessageStub { }
+
+export interface WorkspaceConfigurationStub extends Stub {
+  /**
+   * The starting workspace configuration.
+   */
+  workspaceConfiguration?: WorkspaceConfiguration;
+
+  /**
+   * The expected workspace configuration after all user interactions are run.
+   */
+  expectedWorkspaceConfiguration?: WorkspaceConfiguration;
+}
+
+export interface QuickPickStub extends Stub {
+  /**
+   * The expected quick pick interactions to have been executed during the test.
+   */
+  expectedQuickPicks?: (vscode.QuickPickItem | string)[][];
+}
+
+export interface InputBoxStub extends Stub {
+  /**
+   * The input box responses.
+   */
+  inputBoxResponses?: (string | undefined)[];
+
+  /**
+   * The expected input box executions.
+   */
+  expectedInputBoxes?: InputBoxExecution[];
+}
+
 export interface SimpleTestCaseProps {
   /**
-  * The user interactions to run during the test.
-  */
+   * The user interactions to run during the test.
+   */
   userInteractions?: UserInteraction[];
 
   /**
@@ -148,11 +196,11 @@ export interface SimpleTestCaseProps {
   file?: string;
 
   /**
-  * expectedText is the expected text that is present in the active text editor.
-  * If undefined, then the test asserts that there is no active editor.
-  *
-  * TODO: Make this string[] | string
-  */
+   * expectedText is the expected text that is present in the active text editor.
+   * If undefined, then the test asserts that there is no active editor.
+   *
+   * TODO: Make this string[] | string
+   */
   expectedText?: string[];
 
   /**
@@ -166,64 +214,34 @@ export interface SimpleTestCaseProps {
   expectedSelections?: vscode.Selection[];
 
   /**
-   * The expected set of info messages to be displayed.
+   * Stub configuration for vscode.window.showInformationMessage
    */
-  expectedInfoMessages?: string[];
+  informationMessage?: InformationMessageStub;
 
   /**
-   * The expected set of warning messages to be displayed.
+   * Stub configuration for vscode.window.showWarningMessage
    */
-  expectedWarningMessages?: string[];
+  warningMessage?: WarningMessageStub;
 
   /**
-   * The expected set of error messages to be displayed.
-   */
-  expectedErrorMessages?: string[];
-
-  /**
-  * If true, messages will not be stubbed.
+  * Stub configuration for vscode.window.showErrorMessage
   */
-  skipMessages?: boolean;
+  errorMessage?: ErrorMessageStub;
 
   /**
-   * The starting workspace configuration.
+   * Stub configuration for vscode.WorkspaceConfiguration
    */
-  workspaceConfiguration?: WorkspaceConfiguration;
+  workspaceConfiguration?: WorkspaceConfigurationStub;
 
   /**
-  * The expected workspace configuration after all user interactions are run.
-  */
-  expectedWorkspaceConfiguration?: WorkspaceConfiguration;
-
-  /**
-  * If true, workspace configuration will not be stubbed.
-  */
-  skipWorkspaceConfiguration?: boolean;
-
-  /**
-   * The expected quick pick interactions to have been executed during the test.
+   * Stub configuration for vscode.createQuickPick (and show)
    */
-  expectedQuickPicks?: (vscode.QuickPickItem | string)[][];
+  quickPick?: QuickPickStub;
 
   /**
-  * If true, quick picks will not be stubbed.
-  */
-  skipQuickPicks?: boolean;
-
-  /**
-   * The input box responses.
+   * Stub configuration for vscode.window.showInputBox
    */
-  inputBoxResponses?: (string | undefined)[];
-
-  /**
-   * The expected input box executions.
-   */
-  expectedInputBoxes?: InputBoxExecution[];
-
-  /**
-  * If true, input boxes will not be stubbed.
-  */
-  skipInputBoxes?: boolean;
+  inputBox?: InputBoxStub;
 };
 
 /**
@@ -268,19 +286,16 @@ export class SimpleTestCase implements TestCase {
       editor.selections = (this.props.selections || [new vscode.Selection(0, 0, 0, 0)]);
     }
 
-    // TODO: Add skips for other types
-
-    const stubbers: Stubber[] = [
-      // TODO: Determine best order in which to verify these.
-      new WorkspaceConfigurationStubber(this.props.workspaceConfiguration, this.props.expectedWorkspaceConfiguration, this.props.skipWorkspaceConfiguration),
-      new QuickPickStubber(this.props.expectedQuickPicks),
-      new InputBoxStubber(this.props.inputBoxResponses, this.props.expectedInputBoxes),
-      new ErrorMessageStubber(...(this.props.expectedErrorMessages || [])),
-      new WarningMessageStubber(...(this.props.expectedWarningMessages || [])),
-      new InfoMessageStubber(...(this.props.expectedInfoMessages || [])),
+    const stubInfos: StubInfo[] = [
+      { stub: this.props.workspaceConfiguration, stubber: new WorkspaceConfigurationStubber(this.props.workspaceConfiguration) },
+      { stub: this.props.quickPick, stubber: new QuickPickStubber(this.props.quickPick) },
+      { stub: this.props.inputBox, stubber: new InputBoxStubber(this.props.inputBox) },
+      { stub: this.props.workspaceConfiguration, stubber: new ErrorMessageStubber(this.props.errorMessage) },
+      { stub: this.props.workspaceConfiguration, stubber: new WarningMessageStubber(this.props.warningMessage) },
+      { stub: this.props.workspaceConfiguration, stubber: new InfoMessageStubber(this.props.informationMessage) },
     ];
 
-    testSetup(stubbers);
+    testSetup(stubInfos);
 
     try {
       // Run the commands
@@ -289,7 +304,7 @@ export class SimpleTestCase implements TestCase {
       }
 
       // Verify the outcome (assert in order of information (e.g. mismatch in error messages in more useful than text being mismatched)).
-      testVerify(stubbers);
+      testVerify(stubInfos);
 
       const maybeActiveEditor = vscode.window.activeTextEditor;
 
@@ -302,7 +317,7 @@ export class SimpleTestCase implements TestCase {
         assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections || [new vscode.Selection(0, 0, 0, 0)], "Expected SELECTIONS to be exactly equal");
       }
     } finally {
-      stubbers.forEach(stubber => stubber.cleanup());
+      testCleanup(stubInfos);
     }
   }
 }

@@ -1,25 +1,24 @@
 import assert from "assert";
 import * as vscode from 'vscode';
+import { ErrorMessageStub, InformationMessageStub, MessageStub, WarningMessageStub } from "./test-case";
 import { Stubber } from "./verify";
 
 /**
  * Base class for all message type stubber.
  */
-abstract class MessageStubber implements Stubber {
+abstract class MessageStubber<T extends MessageStub> implements Stubber {
 
   abstract name: string;
   private readonly messages: string[] = [];
   private readonly expectedMessages: string[];
   error?: string;
-  skip: boolean;
 
   abstract readonly messageName: string;
   abstract readonly originalFunc: <T extends string> (message: string, ...items: T[]) => Thenable<T | undefined>;
   abstract setOriginalFunc(f: <T extends string> (message: string, ...items: T[]) => Thenable<T | undefined>): void;
 
-  constructor(...expectedMessages: string[]) {
-    this.expectedMessages = expectedMessages;
-    this.skip = false;
+  constructor(stub?: T) {
+    this.expectedMessages = stub?.expectedMessages || [];
   }
 
   oneTimeSetup(): void { }
@@ -44,7 +43,7 @@ abstract class MessageStubber implements Stubber {
 /**
  * Stubber for capturing and verifying info messages.
  */
-export class InfoMessageStubber extends MessageStubber {
+export class InfoMessageStubber extends MessageStubber<InformationMessageStub> {
   name: string = "InfoMessageStubber";
   messageName: string = "INFO MESSAGES";
   originalFunc: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined> = vscode.window.showInformationMessage;
@@ -56,7 +55,7 @@ export class InfoMessageStubber extends MessageStubber {
 /**
  * Stubber for capturing and verifying warning messages.
  */
-export class WarningMessageStubber extends MessageStubber {
+export class WarningMessageStubber extends MessageStubber<WarningMessageStub> {
   name: string = "WarningMessageStubber";
   messageName: string = "WARNING MESSAGES";
   originalFunc: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined> = vscode.window.showWarningMessage;
@@ -68,7 +67,7 @@ export class WarningMessageStubber extends MessageStubber {
 /**
  * Stubber for capturing and verifying error messages.
  */
-export class ErrorMessageStubber extends MessageStubber {
+export class ErrorMessageStubber extends MessageStubber<ErrorMessageStub> {
   name: string = "ErrorgMessageStubber";
   messageName: string = "ERROR MESSAGES";
   originalFunc: <T extends string>(message: string, ...items: T[]) => Thenable<T | undefined> = vscode.window.showErrorMessage;

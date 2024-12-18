@@ -2,6 +2,7 @@ import assert from 'assert';
 import * as vscode from 'vscode';
 import { JSONStringify } from './json';
 import { nestedGet, nestedHas, nestedSet } from './nested';
+import { WorkspaceConfigurationStub } from './test-case';
 import { Stubber, classlessMap } from './verify';
 
 // The real VS Code implementation does dot-ambiguous logic (e.g. `"faves.favorites": "abc"` is equivalent to `"faves": { "favorites": "abc" }`).
@@ -12,15 +13,13 @@ export class WorkspaceConfigurationStubber implements Stubber {
   readonly name: string = "WorkspaceConfigurationStubber";
   readonly workspaceConfiguration: MustWorkspaceConfiguration;
   readonly expectedWorkspaceConfiguration: MustWorkspaceConfiguration;
-  readonly skip: boolean;
   private readonly originalGetConfig: any;
   error?: string;
 
-  constructor(wc?: WorkspaceConfiguration, expectedWc?: WorkspaceConfiguration, skip?: boolean) {
-    this.workspaceConfiguration = mustWorkspaceConfiguration(wc);
+  constructor(stub?: WorkspaceConfigurationStub) {
+    this.workspaceConfiguration = mustWorkspaceConfiguration(stub?.workspaceConfiguration);
     // TODO: Test update on existing config fails (since might need to deep copy the starting one).
-    this.expectedWorkspaceConfiguration = mustWorkspaceConfiguration(expectedWc || wc);
-    this.skip = skip || false;
+    this.expectedWorkspaceConfiguration = mustWorkspaceConfiguration(stub?.expectedWorkspaceConfiguration || stub?.workspaceConfiguration);
     this.originalGetConfig = vscode.workspace.getConfiguration;
   }
 
@@ -40,9 +39,6 @@ export class WorkspaceConfigurationStubber implements Stubber {
   }
 
   verify(): void {
-    if (this.skip) {
-      return;
-    }
     // TODO: This fails without classlessMap when comparing strongly typed settings with undefined fields. TODO is to add a test for this
     assert.deepStrictEqual(classlessMap(this.workspaceConfiguration), classlessMap(this.expectedWorkspaceConfiguration));
   }

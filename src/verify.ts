@@ -8,17 +8,34 @@ export interface Stubber {
   verify(): void;
   cleanup(): void;
   error?: string;
-  skip: boolean;
+}
+
+export interface Stub {
+  /**
+  * If true, then the logic for the stub will not be run and the normal VS Code
+  * execution will be done.
+  */
+  skip?: boolean;
+
+  /**
+  * If true, then no verification logic for the stub will be executed.
+  */
+  skipVerify?: boolean;
+}
+
+export interface StubInfo {
+  stub?: Stub;
+  stubber: Stubber;
 }
 
 let didOneTime = false;
 
-export function oneTimeSetup(stubbers: Stubber[]) {
+export function oneTimeSetup(stubInfos: StubInfo[]) {
   if (didOneTime) {
     return;
   }
 
-  stubbers.forEach(stubber => stubber.oneTimeSetup());
+  stubInfos.forEach(stubInfo => stubInfo.stubber.oneTimeSetup());
 
   didOneTime = true;
 }
@@ -28,29 +45,33 @@ export function oneTimeSetup(stubbers: Stubber[]) {
  *
  * @param stubbers the set of stubbers to use
  */
-export function testSetup(stubbers: Stubber[]) {
-  const mustStubbers = stubbers || [];
+export function testSetup(stubInfos: StubInfo[]) {
+  oneTimeSetup(stubInfos);
 
-  oneTimeSetup(mustStubbers);
-
-  mustStubbers.forEach(stubber => {
-    if (!stubber.skip) {
-      stubber.setup();
+  stubInfos.forEach(stubInfos => {
+    if (!stubInfos.stub?.skip) {
+      stubInfos.stubber.setup();
     }
   });
 }
 
 
-export function testVerify(stubbers: Stubber[]) {
-  const mustStubbers = stubbers || [];
+export function testVerify(stubInfos: StubInfo[]) {
+  stubInfos.forEach(stubInfos => {
+    assertUndefined(stubInfos.stubber.error, `${stubInfos.stubber.name}.error`);
 
-  mustStubbers.forEach(stubber => {
-    if (!stubber.skip) {
-      assertUndefined(stubber.error, `${stubber.name}.error`);
-      stubber.verify();
+    if (!stubInfos.stub?.skip && !stubInfos.stub?.skipVerify) {
+      stubInfos.stubber.verify();
     }
   });
+}
 
+export function testCleanup(stubInfos: StubInfo[]) {
+  stubInfos.forEach(stubInfos => {
+    if (!stubInfos.stub?.skip) {
+      stubInfos.stubber.cleanup();
+    }
+  });
 }
 
 // Remove class info so deepStrictEqual works on any type

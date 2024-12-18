@@ -1,6 +1,6 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
-import { UserInteraction } from './test-case';
+import { QuickPickStub, UserInteraction } from './test-case';
 import { Stubber, assertUndefined, classless } from './verify';
 
 let realQuickPickFn: <T extends vscode.QuickPickItem> () => vscode.QuickPick<T>;
@@ -17,15 +17,13 @@ export class QuickPickStubber implements Stubber {
   name: string = "QuickPickStubber";
   gotQuickPicks: vscode.QuickPickItem[][];
   currentQuickPick?: FakeQuickPick<any>;
-  skip: boolean;
   error?: string;
 
   expectedExecutions: (vscode.QuickPickItem | string)[][];
 
-  constructor(expectedExecutions?: (vscode.QuickPickItem | string)[][]) {
+  constructor(stub?: QuickPickStub) {
     this.gotQuickPicks = [];
-    this.expectedExecutions = expectedExecutions || [];
-    this.skip = false;
+    this.expectedExecutions = stub?.expectedQuickPicks || [];
   }
 
   oneTimeSetup(): void {

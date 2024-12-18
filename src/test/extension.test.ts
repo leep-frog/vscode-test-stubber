@@ -1,6 +1,7 @@
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
+import assert, { AssertionError } from 'assert';
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
 import { PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
@@ -11,6 +12,10 @@ interface TestCase {
   name: string;
   stc: SimpleTestCaseProps;
   runSolo?: boolean;
+}
+
+interface ErrorTestCase extends TestCase {
+  wantError: string;
 }
 
 function qpe(...items: Item[]): vscode.QuickPickItem[] {
@@ -83,11 +88,13 @@ const testCases: TestCase[] = [
           return false;
         }, 3),
       ],
-      expectedInfoMessages: [
-        "waiter called",
-        "waiter called",
-        "waiter called",
-      ],
+      informationMessage: {
+        expectedMessages: [
+          "waiter called",
+          "waiter called",
+          "waiter called",
+        ],
+      },
     },
   },
   {
@@ -103,13 +110,15 @@ const testCases: TestCase[] = [
           });
         })(),
       ],
-      expectedInfoMessages: [
-        "waiter called",
-        "waiter called",
-        "waiter called",
-        "waiter called",
-        "waiter called",
-      ],
+      informationMessage: {
+        expectedMessages: [
+          "waiter called",
+          "waiter called",
+          "waiter called",
+          "waiter called",
+          "waiter called",
+        ],
+      },
     },
   },
   // Message tests
@@ -119,9 +128,11 @@ const testCases: TestCase[] = [
       userInteractions: [
         cmd("vscode-test-stubber.info", "hello there"),
       ],
-      expectedInfoMessages: [
-        "hello there",
-      ],
+      informationMessage: {
+        expectedMessages: [
+          "hello there",
+        ],
+      },
     },
   },
   {
@@ -132,11 +143,13 @@ const testCases: TestCase[] = [
         cmd("vscode-test-stubber.warning", "a"),
         cmd("vscode-test-stubber.warning", "daisy"),
       ],
-      expectedWarningMessages: [
-        "oops",
-        "a",
-        "daisy",
-      ],
+      warningMessage: {
+        expectedMessages: [
+          "oops",
+          "a",
+          "daisy",
+        ],
+      },
     },
   },
   {
@@ -146,10 +159,12 @@ const testCases: TestCase[] = [
         cmd("vscode-test-stubber.error", "oh"),
         cmd("vscode-test-stubber.error", "nooooo"),
       ],
-      expectedErrorMessages: [
-        "oh",
-        "nooooo",
-      ],
+      errorMessage: {
+        expectedMessages: [
+          "oh",
+          "nooooo",
+        ],
+      },
     },
   },
   // WorkspaceConfiguration tests
@@ -160,18 +175,20 @@ const testCases: TestCase[] = [
         cmd("vscode-test-stubber.doNothing"),
       ],
       workspaceConfiguration: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
-          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
-            ["hello", "there"],
-          ])],
-        ]),
-      },
-      expectedWorkspaceConfiguration: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
-          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
-            ["hello", "there"],
-          ])],
-        ]),
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["hello", "there"],
+            ])],
+          ]),
+        },
+        expectedWorkspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["hello", "there"],
+            ])],
+          ]),
+        },
       },
     },
   },
@@ -182,11 +199,13 @@ const testCases: TestCase[] = [
         cmd("vscode-test-stubber.doNothing"),
       ],
       workspaceConfiguration: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
-          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
-            ["hello", "there"],
-          ])],
-        ]),
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["hello", "there"],
+            ])],
+          ]),
+        },
       },
     },
   },
@@ -196,14 +215,16 @@ const testCases: TestCase[] = [
       userInteractions: [
         cmd("vscode-test-stubber.updateSettings"),
       ],
-      expectedWorkspaceConfiguration: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
-          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
-            ["stubber", new Map<string, any>([
-              ["some-key", "some-value"],
+      workspaceConfiguration: {
+        expectedWorkspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["stubber", new Map<string, any>([
+                ["some-key", "some-value"],
+              ])],
             ])],
-          ])],
-        ]),
+          ]),
+        },
       },
     },
   },
@@ -214,23 +235,25 @@ const testCases: TestCase[] = [
         cmd("vscode-test-stubber.updateSettings"),
       ],
       workspaceConfiguration: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
-          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
-            ["stubber", new Map<string, any>([
-              ["other", "value"],
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["stubber", new Map<string, any>([
+                ["other", "value"],
+              ])],
             ])],
-          ])],
-        ]),
-      },
-      expectedWorkspaceConfiguration: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
-          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
-            ["stubber", new Map<string, any>([
-              ["other", "value"],
-              ["some-key", "some-value"],
+          ]),
+        },
+        expectedWorkspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["stubber", new Map<string, any>([
+                ["other", "value"],
+                ["some-key", "some-value"],
+              ])],
             ])],
-          ])],
-        ]),
+          ]),
+        },
       },
     },
   },
@@ -238,13 +261,15 @@ const testCases: TestCase[] = [
     name: "Use starting config as expected config if no updates",
     stc: {
       workspaceConfiguration: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
-          [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
-            ["stubber", new Map<string, any>([
-              ["other", "value"],
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["stubber", new Map<string, any>([
+                ["other", "value"],
+              ])],
             ])],
-          ])],
-        ]),
+          ]),
+        },
       },
     },
   },
@@ -265,10 +290,14 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction([]),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (0) []',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (0) []',
+        ],
+      },
     },
   },
   {
@@ -278,10 +307,14 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction(['DEF']),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (1) [DEF]',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (1) [DEF]',
+        ],
+      },
     },
   },
   {
@@ -291,10 +324,14 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new SelectActiveItems(),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (0) []',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (0) []',
+        ],
+      },
     },
   },
   {
@@ -306,10 +343,14 @@ const testCases: TestCase[] = [
         }),
         new SelectActiveItems(),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (1) [ghi]',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (1) [ghi]',
+        ],
+      },
     },
   },
   {
@@ -321,10 +362,14 @@ const testCases: TestCase[] = [
         }),
         new SelectActiveItems(),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (2) [abc_ghi]',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (2) [abc_ghi]',
+        ],
+      },
     },
   },
   {
@@ -336,10 +381,14 @@ const testCases: TestCase[] = [
         }),
         new SelectActiveItems(),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (3) [abc_DEF_ghi]',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (3) [abc_DEF_ghi]',
+        ],
+      },
     },
   },
   {
@@ -351,10 +400,14 @@ const testCases: TestCase[] = [
         }),
         new SelectActiveItems(),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (3) [ghi_abc_DEF]',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (3) [ghi_abc_DEF]',
+        ],
+      },
     },
   },
   {
@@ -367,10 +420,14 @@ const testCases: TestCase[] = [
         cmd('workbench.action.quickOpenNavigatePreviousInFilePicker'),
         new SelectActiveItems(),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (1) [DEF]',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (1) [DEF]',
+        ],
+      },
     },
   },
   {
@@ -380,10 +437,14 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new SelectItemQuickPickAction(['abc', 'ghi']),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        'Picked items (2) [abc_ghi]',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (2) [abc_ghi]',
+        ],
+      },
     },
   },
   // TODO: Test CloseQuickPickAction by closing and then running selectItem and verifying error
@@ -394,10 +455,14 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new PressUnknownButtonQuickPickAction('ghi'),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedErrorMessages: [
-        'Unknown item button',
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      errorMessage: {
+        expectedMessages: [
+          'Unknown item button',
+        ],
+      },
     },
   },
   {
@@ -407,10 +472,14 @@ const testCases: TestCase[] = [
         cmd('vscode-test-stubber.quickPick'),
         new PressItemButtonQuickPickAction('ghi', 1),
       ],
-      expectedQuickPicks: [basicQPE()],
-      expectedInfoMessages: [
-        `Got button: {"iconPath":{"id":"close"},"tooltip":"Remove the thing","more":"more stuff: close"}`,
-      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got button: {"iconPath":{"id":"close"},"tooltip":"Remove the thing","more":"more stuff: close"}`,
+        ],
+      },
     },
   },
   // Input box tests
@@ -420,13 +489,17 @@ const testCases: TestCase[] = [
       userInteractions: [
         cmd('vscode-test-stubber.inputBox'),
       ],
-      inputBoxResponses: ["start"],
-      expectedInputBoxes: [{
-        options: undefined,
-      }],
-      expectedInfoMessages: [
-        `Got input box response: start`,
-      ],
+      inputBox: {
+        inputBoxResponses: ["start"],
+        expectedInputBoxes: [{
+          options: undefined,
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got input box response: start`,
+        ],
+      },
     },
   },
   {
@@ -437,16 +510,20 @@ const testCases: TestCase[] = [
           prompt: "Nada",
         })),
       ],
-      inputBoxResponses: [undefined],
-      expectedInputBoxes: [{
-        options: {
-          prompt: "Nada",
-          validateInputProvided: false,
-        },
-      }],
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ],
+      inputBox: {
+        inputBoxResponses: [undefined],
+        expectedInputBoxes: [{
+          options: {
+            prompt: "Nada",
+            validateInputProvided: false,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got undefined input box response`,
+        ],
+      },
     },
   },
   {
@@ -457,16 +534,20 @@ const testCases: TestCase[] = [
           title: "An input box",
         })),
       ],
-      inputBoxResponses: ["some response"],
-      expectedInputBoxes: [{
-        options: {
-          title: "An input box",
-          validateInputProvided: false,
-        },
-      }],
-      expectedInfoMessages: [
-        `Got input box response: some response`,
-      ],
+      inputBox: {
+        inputBoxResponses: ["some response"],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: false,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got input box response: some response`,
+        ],
+      },
     },
   },
   {
@@ -482,20 +563,24 @@ const testCases: TestCase[] = [
           validateInput: () => undefined,
         })),
       ],
-      inputBoxResponses: ["another response"],
-      expectedInputBoxes: [{
-        options: {
-          title: "An input box",
-          ignoreFocusOut: true,
-          password: true,
-          placeHolder: "ph",
-          prompt: "prmpt",
-          validateInputProvided: true,
-        },
-      }],
-      expectedInfoMessages: [
-        `Got input box response: another response`,
-      ],
+      inputBox: {
+        inputBoxResponses: ["another response"],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            ignoreFocusOut: true,
+            password: true,
+            placeHolder: "ph",
+            prompt: "prmpt",
+            validateInputProvided: true,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got input box response: another response`,
+        ],
+      },
     },
   },
   {
@@ -514,20 +599,24 @@ const testCases: TestCase[] = [
           },
         })),
       ],
-      inputBoxResponses: ["abc"],
-      expectedInputBoxes: [{
-        options: {
-          title: "An input box",
-          validateInputProvided: true,
-        },
-        validationMessage: {
-          message: "String is too short",
-          severity: vscode.InputBoxValidationSeverity.Warning,
-        },
-      }],
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ],
+      inputBox: {
+        inputBoxResponses: ["abc"],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: true,
+          },
+          validationMessage: {
+            message: "String is too short",
+            severity: vscode.InputBoxValidationSeverity.Warning,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got undefined input box response`,
+        ],
+      },
     },
   },
   {
@@ -546,20 +635,24 @@ const testCases: TestCase[] = [
           },
         })),
       ],
-      inputBoxResponses: [undefined],
-      expectedInputBoxes: [{
-        options: {
-          title: "An input box",
-          validateInputProvided: true,
-        },
-        validationMessage: {
-          message: "String is too short",
-          severity: vscode.InputBoxValidationSeverity.Warning,
-        },
-      }],
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ],
+      inputBox: {
+        inputBoxResponses: [undefined],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: true,
+          },
+          validationMessage: {
+            message: "String is too short",
+            severity: vscode.InputBoxValidationSeverity.Warning,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got undefined input box response`,
+        ],
+      },
     },
   },
   {
@@ -578,16 +671,20 @@ const testCases: TestCase[] = [
           },
         })),
       ],
-      inputBoxResponses: ["abc"],
-      expectedInputBoxes: [{
-        options: {
-          title: "An input box",
-          validateInputProvided: true,
-        },
-      }],
-      expectedInfoMessages: [
-        `Got input box response: abc`,
-      ],
+      inputBox: {
+        inputBoxResponses: ["abc"],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: true,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got input box response: abc`,
+        ],
+      },
     },
   },
   {
@@ -606,16 +703,20 @@ const testCases: TestCase[] = [
           },
         })),
       ],
-      inputBoxResponses: [undefined],
-      expectedInputBoxes: [{
-        options: {
-          title: "An input box",
-          validateInputProvided: true,
-        },
-      }],
-      expectedInfoMessages: [
-        `Got undefined input box response`,
-      ],
+      inputBox: {
+        inputBoxResponses: [undefined],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: true,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got undefined input box response`,
+        ],
+      },
     },
   },
   // Notebook tests
@@ -632,8 +733,6 @@ const testCases: TestCase[] = [
 ];
 
 suite('Extension Test Suite', () => {
-  vscode.window.showInformationMessage('Start all tests.');
-
   const solo = testCases.some(tc => tc.runSolo);
 
   testCases.filter(tc => !solo || tc.runSolo).forEach(tc => {
@@ -642,6 +741,89 @@ suite('Extension Test Suite', () => {
       await new SimpleTestCase(tc.stc).runTest().catch(e => {
         throw e;
       });
+    });
+  });
+});
+
+const errorTestCases: ErrorTestCase[] = [
+  {
+    name: "[InputBox] Raises error if no input box response provided",
+    wantError: "Expected InputBoxStubber.error to be undefined, but it was defined: Ran out of inputBoxResponses",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox'),
+      ],
+      inputBox: {
+        // inputBoxResponses: ["some response"],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: false,
+          },
+        }],
+      },
+    },
+  },
+  {
+    name: "[InputBox] Raises error if diff in expectedInputBoxes",
+    wantError: "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "Some input box",
+        })),
+      ],
+      inputBox: {
+        inputBoxResponses: ["some response"],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: false,
+          },
+        }],
+      },
+    },
+  },
+  {
+    name: "[InputBox] Raises error if unused input box responses",
+    wantError: "Unused inputBoxResponses",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.inputBox', ipo({
+          title: "An input box",
+        })),
+      ],
+      inputBox: {
+        inputBoxResponses: ["some response", "another response"],
+        expectedInputBoxes: [{
+          options: {
+            title: "An input box",
+            validateInputProvided: false,
+          },
+        }],
+      },
+      informationMessage: {
+        expectedMessages: [
+          `Got input box response: some response`,
+        ],
+      },
+    },
+  },
+];
+
+suite('Error Test Suite', () => {
+  const solo = errorTestCases.some(tc => tc.runSolo);
+
+  errorTestCases.filter(tc => !solo || tc.runSolo).forEach(tc => {
+
+    test(tc.name, async () => {
+      try {
+        await new SimpleTestCase(tc.stc).runTest();
+        throw new AssertionError({ message: "SimpleTestCase().runTest() did not throw an exception" });
+      } catch (e) {
+        const gotError = (e as Error).message;
+        assert.deepStrictEqual(gotError, tc.wantError);
+      }
     });
   });
 });
