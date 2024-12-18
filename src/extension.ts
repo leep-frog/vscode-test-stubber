@@ -11,10 +11,10 @@ interface QuickPickOptions {
 export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('vscode-test-stubber.doNothing', async () => {}),
-    vscode.commands.registerCommand('vscode-test-stubber.info', async (s: string) => vscode.window.showInformationMessage(s)),
-    vscode.commands.registerCommand('vscode-test-stubber.warning', async (s: string) => vscode.window.showWarningMessage(s)),
-    vscode.commands.registerCommand('vscode-test-stubber.error', async (s: string) => vscode.window.showErrorMessage(s)),
+    vscode.commands.registerCommand('vscode-test-stubber.doNothing', async () => { }),
+    vscode.commands.registerCommand('vscode-test-stubber.info', async (s: string) => { vscode.window.showInformationMessage(s); }),
+    vscode.commands.registerCommand('vscode-test-stubber.warning', async (s: string) => { vscode.window.showWarningMessage(s); }),
+    vscode.commands.registerCommand('vscode-test-stubber.error', async (s: string) => { vscode.window.showErrorMessage(s); }),
     vscode.commands.registerCommand('vscode-test-stubber.updateSettings', async () => {
       await vscode.workspace.getConfiguration("stubber").update("some-key", "some-value");
     }),
@@ -71,13 +71,13 @@ export function activate(context: vscode.ExtensionContext) {
         // Clicking an item button
         qp.onDidTriggerItemButton(async (event: vscode.QuickPickItemButtonEvent<Item>): Promise<any> => {
           switch (event.button.constructor) {
-          case CustomButton:
-            qp.dispose();
-            vscode.window.showInformationMessage(`Got button: ${JSON.stringify(event.button)}`);
-            break;
-          default:
-            qp.dispose();
-            vscode.window.showErrorMessage(`Unknown item button`);
+            case CustomButton:
+              qp.dispose();
+              vscode.window.showInformationMessage(`Got button: ${JSON.stringify(event.button)}`);
+              break;
+            default:
+              qp.dispose();
+              vscode.window.showErrorMessage(`Unknown item button`);
           }
         }),
       );
@@ -88,7 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
 
 export interface Item extends vscode.QuickPickItem {
   extra: string;

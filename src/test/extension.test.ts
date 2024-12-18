@@ -719,6 +719,29 @@ const testCases: TestCase[] = [
       },
     },
   },
+  // Skip tests
+  {
+    name: "Skips info message stubbing",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "hello there"),
+      ],
+      informationMessage: {
+        skip: true,
+      },
+    },
+  },
+  {
+    name: "Skips info message verification",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "hello there"),
+      ],
+      informationMessage: {
+        skipVerify: true,
+      },
+    },
+  },
   // Notebook tests
   // {
   //   name: "[QuickPick] Select multiple items",
@@ -746,6 +769,56 @@ suite('Extension Test Suite', () => {
 });
 
 const errorTestCases: ErrorTestCase[] = [
+  // Message
+  {
+    name: "[InfoMessage] Fails if info message diff",
+    wantError: "Expected INFO MESSAGES to be exactly equal",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "hello there"),
+      ],
+    },
+  },
+  // Workspace configuration
+  {
+    name: "[WorkspaceConfiguration] Fails if workspace configuration diff",
+    wantError: [
+      'Expected values to be strictly deep-equal:',
+      '+ actual - expected',
+      '',
+      '  {',
+      '    configuration: Map(1) {',
+      '      3 => Map(1) {',
+      "+       'hello' => 'there'",
+      "-       'hello' => 'goodbye'",
+      '      }',
+      '    },',
+      '    languageConfiguration: Map(0) {}',
+      '  }',
+    ].join("\n"),
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.doNothing"),
+      ],
+      workspaceConfiguration: {
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["hello", "there"],
+            ])],
+          ]),
+        },
+        expectedWorkspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["hello", "goodbye"],
+            ])],
+          ]),
+        },
+      },
+    },
+  },
+  // InputBox
   {
     name: "[InputBox] Raises error if no input box response provided",
     wantError: "Expected InputBoxStubber.error to be undefined, but it was defined: Ran out of inputBoxResponses",
@@ -754,7 +827,6 @@ const errorTestCases: ErrorTestCase[] = [
         cmd('vscode-test-stubber.inputBox'),
       ],
       inputBox: {
-        // inputBoxResponses: ["some response"],
         expectedInputBoxes: [{
           options: {
             title: "An input box",

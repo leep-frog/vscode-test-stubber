@@ -26,7 +26,7 @@ abstract class MessageStubber<T extends MessageStub> implements Stubber {
   setup(): void {
     this.setOriginalFunc(async (s: string): Promise<undefined> => {
       this.messages.push(s);
-      this.originalFunc(s);
+      await this.originalFunc(s);
       return;
     });
   }

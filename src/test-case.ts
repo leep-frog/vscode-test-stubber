@@ -287,12 +287,13 @@ export class SimpleTestCase implements TestCase {
     }
 
     const stubInfos: StubInfo[] = [
+      // TODO: Force stubs and stubber to reference same stub type
       { stub: this.props.workspaceConfiguration, stubber: new WorkspaceConfigurationStubber(this.props.workspaceConfiguration) },
       { stub: this.props.quickPick, stubber: new QuickPickStubber(this.props.quickPick) },
       { stub: this.props.inputBox, stubber: new InputBoxStubber(this.props.inputBox) },
-      { stub: this.props.workspaceConfiguration, stubber: new ErrorMessageStubber(this.props.errorMessage) },
-      { stub: this.props.workspaceConfiguration, stubber: new WarningMessageStubber(this.props.warningMessage) },
-      { stub: this.props.workspaceConfiguration, stubber: new InfoMessageStubber(this.props.informationMessage) },
+      { stub: this.props.errorMessage, stubber: new ErrorMessageStubber(this.props.errorMessage) },
+      { stub: this.props.warningMessage, stubber: new WarningMessageStubber(this.props.warningMessage) },
+      { stub: this.props.informationMessage, stubber: new InfoMessageStubber(this.props.informationMessage) },
     ];
 
     testSetup(stubInfos);
