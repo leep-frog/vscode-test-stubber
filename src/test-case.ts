@@ -61,6 +61,8 @@ class OpenFileExecution implements UserInteraction {
 
   async do() {
     await vscode.workspace.openTextDocument(path.join(...this.filepath)).then(doc => vscode.window.showTextDocument(doc));
+    const w = new Waiter(3, () => !!vscode.window.activeTextEditor, 50);
+    await w.do();
   };
 }
 
@@ -261,12 +263,13 @@ export class SimpleTestCase implements TestCase {
 
     let editor: vscode.TextEditor | undefined;
     if (this.props.file !== undefined) {
-      await vscode.workspace.openTextDocument(this.props.file).then(doc => vscode.window.showTextDocument(doc));
+      await new OpenFileExecution(this.props.file).do();
       editor = assertDefined(vscode.window.activeTextEditor, "vscode.window.activeTextEditor");
     } else if (this.props.text !== undefined) {
       await vscode.commands.executeCommand("workbench.action.files.newUntitledFile");
 
       const editor_ = assertDefined(vscode.window.activeTextEditor, "vscode.window.activeTextEditor");
+      await editor_.edit((eb) => eb.setEndOfLine(vscode.EndOfLine.LF));
       await editor_.edit(eb => {
         const line = editor_.document.lineAt(editor_.document.lineCount - 1);
         eb.delete(new vscode.Range(

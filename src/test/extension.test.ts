@@ -2,10 +2,11 @@
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import assert, { AssertionError } from 'assert';
+import path from 'path';
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
 import { CloseQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
-import { SimpleTestCase, SimpleTestCaseProps, Waiter, cmd } from '../test-case';
+import { SimpleTestCase, SimpleTestCaseProps, Waiter, cmd, combineInteractions, openFile } from '../test-case';
 // import * as myExtension from '../../extension';
 
 interface TestCase {
@@ -120,6 +121,112 @@ const testCases: TestCase[] = [
           "waiter called",
         ],
       },
+    },
+  },
+  {
+    name: "combineInteractions works",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "un"),
+        combineInteractions(
+          cmd("vscode-test-stubber.info", "deux"),
+          cmd("vscode-test-stubber.warning", "trois"),
+          cmd("vscode-test-stubber.info", "quatre"),
+        ),
+        cmd("vscode-test-stubber.info", "five"),
+        cmd("vscode-test-stubber.warning", "six"),
+      ],
+      informationMessage: {
+        expectedMessages: [
+          "un",
+          "deux",
+          "quatre",
+          "five",
+        ],
+      },
+      warningMessage: {
+        expectedMessages: [
+          "trois",
+          "six",
+        ],
+      },
+    },
+  },
+  {
+    name: "text works for initialization",
+    stc: {
+      text: [
+        "abc",
+        "def",
+        "gj",
+        "",
+      ],
+      expectedText: [
+        "abc",
+        "def",
+        "ghij",
+        "",
+      ],
+      selections: [
+        new vscode.Selection(0, 2, 0, 2),
+      ],
+      userInteractions: [
+        cmd('cursorDown'),
+        cmd('cursorDown'),
+        cmd('cursorLeft'),
+        cmd('type', { text: 'hi' }),
+      ],
+      expectedSelections: [
+        new vscode.Selection(2, 3, 2, 3),
+      ],
+    },
+  },
+  {
+    name: "file works for initialization",
+    stc: {
+      file: path.resolve(__dirname, "..", "..", "src", "test", "test-workspace", "simple.go"),
+      selections: [
+        new vscode.Selection(2, 4, 2, 4),
+      ],
+      userInteractions: [
+        cmd('cursorDown'),
+        cmd('cursorDown'),
+        cmd('cursorRight'),
+      ],
+      expectedSelections: [
+        new vscode.Selection(4, 5, 4, 5),
+      ],
+      expectedText: [
+        "package main",
+        "",
+        'import "fmt"',
+        "",
+        "func main() {",
+        '\tfmt.Println("Hello, world!")',
+        "}",
+        "",
+      ],
+    },
+  },
+  {
+    name: "openFile works",
+    stc: {
+      userInteractions: [
+        openFile(path.resolve(__dirname, "..", "..", "src", "test", "test-workspace", "simple.go")),
+      ],
+      expectedSelections: [
+        new vscode.Selection(4, 5, 4, 5),
+      ],
+      expectedText: [
+        "package main",
+        "",
+        'import "fmt"',
+        "",
+        "func main() {",
+        '\tfmt.Println("Hello, world!")',
+        "}",
+        "",
+      ],
     },
   },
   // Message tests
@@ -867,10 +974,76 @@ suite('Extension Test Suite', () => {
 });
 
 const errorTestCases: ErrorTestCase[] = [
+  {
+    name: "Fails if selection provided, but no active editor",
+    wantError: "Expected editor (must be defined when selections is set) to be defined, but it was undefined",
+    stc: {
+      selections: [new vscode.Selection(0, 0, 0, 0)],
+    },
+  },
+  {
+    name: "fails if expectedSelections are off",
+    wantError: [
+      `Expected SELECTIONS to be exactly equal`,
+      `+ actual - expected ... Lines skipped`,
+      ``,
+      `  [`,
+      `    tv {`,
+      `...`,
+      `      },`,
+      `      e: io {`,
+      `+       c: 1,`,
+      `-       c: 2,`,
+      `        e: 1`,
+      `      },`,
+      `...`,
+      `      },`,
+      `      g: io {`,
+      `+       c: 1,`,
+      `-       c: 2,`,
+      `        e: 1`,
+      `...`,
+      `      }`,
+      `    }`,
+      `  ]`,
+    ].join('\n'),
+    stc: {
+      text: [
+        "abc",
+        "def",
+        "ghi",
+        "",
+      ],
+      expectedText: [
+        "abc",
+        "def",
+        "ghi",
+        "",
+      ],
+      selections: [
+        new vscode.Selection(0, 0, 0, 0),
+        new vscode.Selection(0, 2, 1, 1),
+        new vscode.Selection(2, 3, 2, 3),
+      ],
+      expectedSelections: [
+        new vscode.Selection(0, 0, 0, 0),
+        new vscode.Selection(0, 2, 2, 1),
+        new vscode.Selection(2, 3, 2, 3),
+      ],
+    },
+  },
   // Message
   {
     name: "[InfoMessage] Fails if info message diff",
-    wantError: "Expected INFO MESSAGES to be exactly equal",
+    wantError: [
+      `Expected INFO MESSAGES to be exactly equal`,
+      `+ actual - expected`,
+      ``,
+      `+ [`,
+      `+   'hello there'`,
+      `+ ]`,
+      `- []`,
+    ].join("\n"),
     stc: {
       userInteractions: [
         cmd("vscode-test-stubber.info", "hello there"),
@@ -936,7 +1109,20 @@ const errorTestCases: ErrorTestCase[] = [
   },
   {
     name: "[InputBox] Raises error if diff in expectedInputBoxes",
-    wantError: "Expected INPUT BOX VALIDATION MESSAGES to be exactly equal",
+    wantError: [
+      `Expected INPUT BOX VALIDATION MESSAGES to be exactly equal`,
+      `+ actual - expected`,
+      ``,
+      `  [`,
+      `    {`,
+      `      options: {`,
+      `+       title: 'Some input box',`,
+      `-       title: 'An input box',`,
+      `        validateInputProvided: false`,
+      `      }`,
+      `    }`,
+      `  ]`,
+    ].join("\n"),
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
@@ -956,7 +1142,15 @@ const errorTestCases: ErrorTestCase[] = [
   },
   {
     name: "[InputBox] Raises error if unused input box responses",
-    wantError: "Unused inputBoxResponses",
+    wantError: [
+      `Unused inputBoxResponses`,
+      `+ actual - expected`,
+      ``,
+      `+ [`,
+      `+   'another response'`,
+      `+ ]`,
+      `- []`,
+    ].join("\n"),
     stc: {
       userInteractions: [
         cmd('vscode-test-stubber.inputBox', ipo({
