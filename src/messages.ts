@@ -11,6 +11,7 @@ abstract class MessageStubber<T extends MessageStub> implements Stubber {
   abstract name: string;
   private readonly messages: string[] = [];
   private readonly expectedMessages: string[];
+  private readonly ignoreOrder: boolean;
   error?: string;
 
   abstract readonly messageName: string;
@@ -19,6 +20,7 @@ abstract class MessageStubber<T extends MessageStub> implements Stubber {
 
   constructor(stub?: T) {
     this.expectedMessages = stub?.expectedMessages || [];
+    this.ignoreOrder = !!stub?.ignoreOrder;
   }
 
   oneTimeSetup(): void { }
@@ -32,7 +34,16 @@ abstract class MessageStubber<T extends MessageStub> implements Stubber {
   }
 
   verify(): void {
-    assert.deepStrictEqual(this.messages, this.expectedMessages, `Expected ${this.messageName} to be exactly equal`);
+    // Copy arrays so sorting doesn't change the order.
+    const got = [...this.messages];
+    const want = [...this.expectedMessages];
+
+    if (this.ignoreOrder) {
+      got.sort();
+      want.sort();
+    }
+
+    assert.deepStrictEqual(got, want, `Expected ${this.messageName} to be exactly equal${this.ignoreOrder ? " (ignoring order)" : ""}`);
   }
 
   cleanup(): void {

@@ -275,6 +275,24 @@ const testCases: TestCase[] = [
       },
     },
   },
+  {
+    name: "Ignores message ordering if specified",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "abc"),
+        cmd("vscode-test-stubber.info", "one"),
+        cmd("vscode-test-stubber.info", "alpha"),
+      ],
+      informationMessage: {
+        ignoreOrder: true,
+        expectedMessages: [
+          "alpha",
+          "abc",
+          "one",
+        ],
+      },
+    },
+  },
   // WorkspaceConfiguration tests
   {
     name: "Does nothing command with initial WorkspaceConfiguration and expected WorkspaceConfiguration",
@@ -1066,6 +1084,59 @@ const errorTestCases: ErrorTestCase[] = [
       userInteractions: [
         cmd("vscode-test-stubber.info", "hello there"),
       ],
+    },
+  },
+  {
+    name: "[InfoMessage] Fails if info message diff even when ignoring order",
+    wantError: [
+      `Expected INFO MESSAGES to be exactly equal (ignoring order)`,
+      `+ actual - expected`,
+      ``,
+      `  [`,
+      `+   'abc',`,
+      `+   'def'`,
+      `-   'def',`,
+      `-   'ghi'`,
+      `  ]`,
+    ].join("\n"),
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "abc"),
+        cmd("vscode-test-stubber.info", "def"),
+      ],
+      informationMessage: {
+        ignoreOrder: true,
+        expectedMessages: [
+          "def",
+          "ghi",
+        ],
+      },
+    },
+  },
+  {
+    name: "[InfoMessage] Fails if info message diff in ordering only",
+    wantError: [
+      `Expected INFO MESSAGES to be exactly equal`,
+      `+ actual - expected`,
+      ``,
+      `  [`,
+      `+   'abc',`,
+      `+   'def'`,
+      `-   'def',`,
+      `-   'abc'`,
+      `  ]`,
+    ].join("\n"),
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.info", "abc"),
+        cmd("vscode-test-stubber.info", "def"),
+      ],
+      informationMessage: {
+        expectedMessages: [
+          "def",
+          "abc",
+        ],
+      },
     },
   },
   // Workspace configuration
