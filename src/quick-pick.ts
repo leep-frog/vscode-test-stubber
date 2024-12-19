@@ -125,7 +125,9 @@ export class SelectActiveItems extends QuickPickAction {
 
 export class CloseQuickPickAction extends QuickPickAction {
   async run(): Promise<any> {
-    return vscode.commands.executeCommand("workbench.action.closeQuickOpen");
+    return vscode.commands.executeCommand("workbench.action.closeQuickOpen").then(() => {
+      currentQuickPick.quickPick = undefined;
+    });
   }
 }
 

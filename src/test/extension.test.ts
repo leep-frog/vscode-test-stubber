@@ -4,7 +4,7 @@
 import assert, { AssertionError } from 'assert';
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
-import { PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
+import { CloseQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
 import { SimpleTestCase, SimpleTestCaseProps, Waiter, cmd } from '../test-case';
 // import * as myExtension from '../../extension';
 
@@ -878,20 +878,17 @@ const errorTestCases: ErrorTestCase[] = [
       ],
     },
   },
-  // {
-  //   name: "[QuickPick] Fails if closed and then try to pick an item",
-  //   wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: Trying to run QuickPickAction when there isn't an active QuickPick available",
-  //   stc: {
-  //     userInteractions: [
-  //       cmd('vscode-test-stubber.quickPick'),
-  //       delay(4000),
-  //       new CloseQuickPickAction(),
-  //       delay(4000),
-  //       new SelectItemQuickPickAction(['abc']),
-  //       delay(4000),
-  //     ],
-  //   },
-  // },
+  {
+    name: "[QuickPick] Fails if closed and then try to pick an item",
+    wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: Trying to run QuickPickAction when there isn't an active QuickPick available",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick'),
+        new CloseQuickPickAction(),
+        new SelectItemQuickPickAction(['abc']),
+      ],
+    },
+  },
   {
     name: "[QuickPick] Select item fails if no label",
     wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: All item labels were not matched. Found []; wanted [ABC]",
