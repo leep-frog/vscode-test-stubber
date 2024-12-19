@@ -652,7 +652,25 @@ const testCases: TestCase[] = [
       },
     },
   },
-  // TODO: Test CloseQuickPickAction by closing and then running selectItem and verifying error
+  {
+    name: "[QuickPick] Close and re-open",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick'),
+        new CloseQuickPickAction(),
+        cmd('vscode-test-stubber.quickPick'),
+        new SelectItemQuickPickAction(['DEF']),
+      ],
+      quickPick: {
+        expectedQuickPicks: [basicQPE(), basicQPE()],
+      },
+      informationMessage: {
+        expectedMessages: [
+          'Picked items (1) [DEF]',
+        ],
+      },
+    },
+  },
   {
     name: "[QuickPick] Press an unknown button",
     stc: {
