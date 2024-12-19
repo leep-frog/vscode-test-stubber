@@ -35,8 +35,8 @@ export class QuickPickStubber implements Stubber {
   }
 
   verify(): void {
-    assertUndefined(globalQuickPickError, this.name);
-    const wantQuickPickOptions = this.expectedExecutions.map((value: (string | vscode.QuickPickItem)[], index: number, array: (string | vscode.QuickPickItem)[][]) => {
+    assertUndefined(globalQuickPickError, `${this.name}.error`);
+    const wantQuickPickOptions = this.expectedExecutions.map((value: (string | vscode.QuickPickItem)[]) => {
       return value.map((s: string | vscode.QuickPickItem) => {
 
         if (typeof (s) === typeof ("")) {
@@ -69,7 +69,7 @@ export abstract class QuickPickAction implements UserInteraction {
 
   async do(): Promise<any> {
     if (!currentQuickPick.quickPick) {
-      // We don't have access to a global value here, so
+      // We don't have access to a specific FakeQuickPick, hence the need for a global error variable
       globalQuickPickError = `Trying to run QuickPickAction when there isn't an active QuickPick available`;
       return;
     }

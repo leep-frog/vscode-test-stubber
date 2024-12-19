@@ -12,7 +12,7 @@
     "Other"
   ],
   "activationEvents": [],
-  "main": "./out/index.js",
+  "main": "./out/extension.js",
   "module": "./out/index.mjs",
   "types": "./out/index.d.ts",
   "files": [

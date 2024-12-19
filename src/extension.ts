@@ -48,6 +48,9 @@ export function activate(context: vscode.ExtensionContext) {
             new CustomButton('close', 'Remove the thing'),
           ],
         },
+        {
+          label: 'just a string label',
+        },
       ];
 
       const qp = vscode.window.createQuickPick<Item>();
@@ -91,7 +94,7 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() { }
 
 export interface Item extends vscode.QuickPickItem {
-  extra: string;
+  extra?: string;
   fields?: number;
 }
 

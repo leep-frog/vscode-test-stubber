@@ -18,7 +18,7 @@ interface ErrorTestCase extends TestCase {
   wantError: string;
 }
 
-function qpe(...items: Item[]): vscode.QuickPickItem[] {
+function qpe(...items: (string | Item)[]): (string | vscode.QuickPickItem)[] {
   return items;
 }
 
@@ -63,6 +63,7 @@ function basicQPE() {
         },
       ),
     },
+    'just a string label',
   );
 }
 
@@ -274,15 +275,6 @@ const testCases: TestCase[] = [
     },
   },
   // Quick pick tests
-  // TODO: Error tests
-  /*{
-    name: "[QuickPick] Select items when no quickPick",
-    stc: {
-      userInteractions: [
-        new SelectItemQuickPickAction([]),
-      ],
-    },
-  },*/
   {
     name: "[QuickPick] Select no items",
     stc: {
@@ -874,11 +866,70 @@ const errorTestCases: ErrorTestCase[] = [
           },
         }],
       },
-      informationMessage: {
-        expectedMessages: [
-          `Got input box response: some response`,
-        ],
-      },
+    },
+  },
+  // QuickPick
+  {
+    name: "[QuickPick] Fails if a QuickPick action is provided when no QuickPick has been run",
+    wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: Trying to run QuickPickAction when there isn't an active QuickPick available",
+    stc: {
+      userInteractions: [
+        new SelectActiveItems(),
+      ],
+    },
+  },
+  // {
+  //   name: "[QuickPick] Fails if closed and then try to pick an item",
+  //   wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: Trying to run QuickPickAction when there isn't an active QuickPick available",
+  //   stc: {
+  //     userInteractions: [
+  //       cmd('vscode-test-stubber.quickPick'),
+  //       delay(4000),
+  //       new CloseQuickPickAction(),
+  //       delay(4000),
+  //       new SelectItemQuickPickAction(['abc']),
+  //       delay(4000),
+  //     ],
+  //   },
+  // },
+  {
+    name: "[QuickPick] Select item fails if no label",
+    wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: All item labels were not matched. Found []; wanted [ABC]",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick'),
+        new SelectItemQuickPickAction(['ABC']),
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] PressItemButton fails if no label matches",
+    wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: No items matched the provided item label (def)",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick'),
+        new PressItemButtonQuickPickAction('def', 2),
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] PressItemButton fails if button index is out of range",
+    wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: Item only has 2, but needed at least 3",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick'),
+        new PressItemButtonQuickPickAction('ghi', 2),
+      ],
+    },
+  },
+  {
+    name: "[QuickPick] PressUnknownButton fails if bad label",
+    wantError: "Expected QuickPickStubber.error to be undefined, but it was defined: No items matched the provided item label (idk)",
+    stc: {
+      userInteractions: [
+        cmd('vscode-test-stubber.quickPick'),
+        new PressUnknownButtonQuickPickAction("idk"),
+      ],
     },
   },
 ];
