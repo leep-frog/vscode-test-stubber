@@ -6,6 +6,12 @@ interface QuickPickOptions {
   activeItems?: number[];
 }
 
+export interface GetConfigurationProps {
+  key: string;
+  scope?: vscode.ConfigurationScope;
+  section: string;
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -17,6 +23,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('vscode-test-stubber.error', async (s: string) => { vscode.window.showErrorMessage(s); }),
     vscode.commands.registerCommand('vscode-test-stubber.updateSettings', async () => {
       await vscode.workspace.getConfiguration("stubber").update("some-key", "some-value");
+    }),
+    vscode.commands.registerCommand('vscode-test-stubber.getConfiguration', async (props: GetConfigurationProps) => {
+      vscode.window.showInformationMessage(`${JSON.stringify(await vscode.workspace.getConfiguration(props.key, props.scope).get(props.section))}`);
     }),
     vscode.commands.registerCommand('vscode-test-stubber.inputBox', async (options?: vscode.InputBoxOptions) => {
       const response = await vscode.window.showInputBox(options);

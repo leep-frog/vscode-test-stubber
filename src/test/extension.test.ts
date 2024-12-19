@@ -274,6 +274,112 @@ const testCases: TestCase[] = [
       },
     },
   },
+  // getConfiguration tests (more thorough tests are done in src/test/workspace-configuration.test.ts)
+  {
+    name: "Handles getting missing key",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.getConfiguration", {
+          key: "other",
+          section: "hello",
+        }),
+      ],
+      workspaceConfiguration: {
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["stubber", new Map<string, any>([
+                ["hello", "there"],
+              ])],
+            ])],
+          ]),
+        },
+      },
+      informationMessage: {
+        expectedMessages: ["undefined"],
+      }
+    },
+  },
+  {
+    name: "Handles getting missing section",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.getConfiguration", {
+          key: "stubber",
+          section: "goodbye",
+        }),
+      ],
+      workspaceConfiguration: {
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["stubber", new Map<string, any>([
+                ["hello", "there"],
+              ])],
+            ])],
+          ]),
+        },
+      },
+      informationMessage: {
+        expectedMessages: ["undefined"],
+      }
+    },
+  },
+  {
+    name: "Gets a valid configuration",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.getConfiguration", {
+          key: "stubber",
+          section: "hello",
+        }),
+      ],
+      workspaceConfiguration: {
+        workspaceConfiguration: {
+          configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+            [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+              ["stubber", new Map<string, any>([
+                ["hello", "there"],
+              ])],
+            ])],
+          ]),
+        },
+      },
+      informationMessage: {
+        expectedMessages: ['"there"'],
+      }
+    },
+  },
+  {
+    name: "Gets a valid language configuration",
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.getConfiguration", {
+          scope: {
+            languageId: "valyrian",
+          },
+          key: "stubber",
+          section: "one",
+        }),
+      ],
+      workspaceConfiguration: {
+        workspaceConfiguration: {
+          languageConfiguration: new Map<string, Map<vscode.ConfigurationTarget, Map<string, any>>>([
+            ["valyrian", new Map<vscode.ConfigurationTarget, Map<string, any>>([
+              [vscode.ConfigurationTarget.WorkspaceFolder, new Map<string, any>([
+                ["stubber", new Map<string, any>([
+                  ["one", 111]
+                ])],
+              ])]
+            ])],
+          ]),
+        },
+      },
+      informationMessage: {
+        expectedMessages: ['111'],
+      }
+    },
+  },
   // Quick pick tests
   {
     name: "[QuickPick] Select no items",
@@ -926,6 +1032,26 @@ const errorTestCases: ErrorTestCase[] = [
       userInteractions: [
         cmd('vscode-test-stubber.quickPick'),
         new PressUnknownButtonQuickPickAction("idk"),
+      ],
+    },
+  },
+  // WorkspaceConfiguration
+  {
+    name: "[WorkspaceConfiguration] fails if invalid scope",
+    wantError: [
+      'Only languageId is supported for ConfigurationScope; got {',
+      '  "no": "languageId field"',
+      '}',
+    ].join('\n'),
+    stc: {
+      userInteractions: [
+        cmd("vscode-test-stubber.getConfiguration", {
+          key: "key-with-empty-scope",
+          scope: {
+            no: "languageId field",
+          },
+          section: "sub.section",
+        }),
       ],
     },
   },

@@ -239,7 +239,7 @@ const testCases: TestCase[] = [
     value: 111,
     unqualifiedConfigurationTarget: vscode.ConfigurationTarget.Global,
     want: {
-        configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
+      configuration: new Map<vscode.ConfigurationTarget, Map<string, any>>([
         [vscode.ConfigurationTarget.Global, new Map<string, any>([
           ["one", 111],
         ])]
@@ -840,7 +840,7 @@ const testCases: TestCase[] = [
     },
   },
   {
-    name: "Updates non-language setting if overrideInLanguage is false",
+    name: "Updates nested non-language setting if overrideInLanguage is false",
     languageId: "valyrian",
     overrideInLanguage: false,
     section: "place.v2",

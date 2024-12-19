@@ -42,6 +42,10 @@
         "title": "Update Settings"
       },
       {
+        "command": "vscode-test-stubber.getConfiguration",
+        "title": "Gets WorkspaceConfiguration"
+      },
+      {
         "command": "vscode-test-stubber.inputBox",
         "title": "Input Box"
       },
