@@ -20,20 +20,27 @@ export interface UserInteraction {
 export class Waiter {
 
   readonly delayIntervalMs: number;
-  done: () => boolean;
+  done: (() => Promise<boolean>) | (() => boolean);
   maxAttempts?: number;
 
-  constructor(delayIntervalMs: number, done: () => boolean, maxAttempts?: number) {
+  constructor(delayIntervalMs: number, done: (() => Promise<boolean>) | (() => boolean), maxAttempts?: number) {
     this.delayIntervalMs = delayIntervalMs;
     this.done = done;
     this.maxAttempts = maxAttempts;
   }
 
   async do(): Promise<any> {
-    for (let numCalls = 0; (this.maxAttempts === undefined || numCalls < this.maxAttempts) && !this.done(); numCalls++) {
+    for (let numCalls = 0; (this.maxAttempts === undefined || numCalls < this.maxAttempts) && !(await this.done()); numCalls++) {
       await delay(this.delayIntervalMs).do();
     }
   }
+}
+
+export function funcInteraction(done: (() => Promise<any>) | (() => any)): UserInteraction {
+  return new Waiter(0, async () => {
+    await done();
+    return true;
+  }, 1);
 }
 
 class CommandExecution implements UserInteraction {

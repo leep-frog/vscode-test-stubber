@@ -6,7 +6,7 @@ import path from 'path';
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
 import { CloseQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
-import { SimpleTestCase, SimpleTestCaseProps, Waiter, cmd, combineInteractions, openFile } from '../test-case';
+import { SimpleTestCase, SimpleTestCaseProps, Waiter, cmd, combineInteractions, delay, funcInteraction, openFile } from '../test-case';
 // import * as myExtension from '../../extension';
 
 interface TestCase {
@@ -95,6 +95,57 @@ const testCases: TestCase[] = [
           "waiter called",
           "waiter called",
           "waiter called",
+        ],
+      },
+    },
+  },
+  {
+    name: "Waiter accepts async method",
+    stc: {
+      userInteractions: [
+        new Waiter(1, async () => {
+          vscode.window.showInformationMessage("waiter pre");
+          await delay(50).do();
+          vscode.window.showInformationMessage("waiter post");
+          return false;
+        }, 2),
+      ],
+      informationMessage: {
+        expectedMessages: [
+          "waiter pre",
+          "waiter post",
+          "waiter pre",
+          "waiter post",
+        ],
+      },
+    },
+  },
+  {
+    name: "funcInteraction works",
+    stc: {
+      userInteractions: [
+        funcInteraction(() => {
+          vscode.window.showErrorMessage(`fi`);
+        }),
+      ],
+      errorMessage: {
+        expectedMessages: [
+          "fi",
+        ],
+      },
+    },
+  },
+  {
+    name: "funcInteraction works with async method",
+    stc: {
+      userInteractions: [
+        funcInteraction(async () => {
+          vscode.window.showErrorMessage(`fi2`);
+        }),
+      ],
+      errorMessage: {
+        expectedMessages: [
+          "fi2",
         ],
       },
     },
