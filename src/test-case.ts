@@ -292,7 +292,9 @@ export class SimpleTestCase implements TestCase {
       assertDefined(editor, "editor (must be defined when selections is set)");
     }
 
+    console.log(`Checking for editor`);
     if (editor) {
+      console.log(`Setting text editor selection to: ${JSON.stringify(this.props.selections)}`);
       editor.selections = (this.props.selections || [new vscode.Selection(0, 0, 0, 0)]);
     }
 
