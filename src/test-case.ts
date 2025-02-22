@@ -1,6 +1,7 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
 
+import { readFileSync } from 'fs';
 import path from 'path';
 import { InputBoxExecution, InputBoxStubber } from './input-box';
 import { ErrorMessageStubber, InfoMessageStubber, WarningMessageStubber } from './messages';
@@ -67,8 +68,18 @@ class OpenFileExecution implements UserInteraction {
   }
 
   async do() {
-    await vscode.workspace.openTextDocument(path.join(...this.filepath)).then(doc => vscode.window.showTextDocument(doc));
-    const w = new Waiter(3, () => !!vscode.window.activeTextEditor, 50);
+    const joinedPath = path.join(...this.filepath);
+    await vscode.workspace.openTextDocument(joinedPath).then(doc => vscode.window.showTextDocument(doc));
+    const fileText = readFileSync(joinedPath).toString();
+    const w = new Waiter(3, () => {
+      console.log(`(TODO: Remove this log): Waiting for file text to be equal`);
+      // Wait for the editor to be active AND for the text to be the right text.
+      // Sometimes, if a file is opened immediately after updating, the editor
+      // takes a second to update the text. This results in issues such as
+      // the cursor being in the wrong spot during test execution.
+      // TODO: Add a test for this (see very-import-ant most recent commits)
+      return vscode.window.activeTextEditor?.document.getText() === fileText;
+    }, 1000);
     await w.do();
   };
 }
@@ -292,9 +303,7 @@ export class SimpleTestCase implements TestCase {
       assertDefined(editor, "editor (must be defined when selections is set)");
     }
 
-    console.log(`Checking for editor`);
     if (editor) {
-      console.log(`Setting text editor selection to: ${JSON.stringify(this.props.selections)}`);
       editor.selections = (this.props.selections || [new vscode.Selection(0, 0, 0, 0)]);
     }
 
