@@ -1075,7 +1075,7 @@ const errorTestCases: ErrorTestCase[] = [
       `+ actual - expected ... Lines skipped`,
       ``,
       `  [`,
-      `    tv {`,
+      `    lv {`,
       `...`,
       `      },`,
       `      e: co {`,
