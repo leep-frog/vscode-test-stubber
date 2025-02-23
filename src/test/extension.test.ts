@@ -2,12 +2,17 @@
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import assert, { AssertionError } from 'assert';
+import { writeFileSync } from 'fs';
 import path from 'path';
 import * as vscode from 'vscode';
 import { CustomButton, Item } from '../extension';
 import { CloseQuickPickAction, PressItemButtonQuickPickAction, PressUnknownButtonQuickPickAction, SelectActiveItems, SelectItemQuickPickAction } from '../quick-pick';
 import { SimpleTestCase, SimpleTestCaseProps, Waiter, cmd, combineInteractions, delay, funcInteraction, openFile } from '../test-case';
 // import * as myExtension from '../../extension';
+
+function relFilePath(...filename: string[]) {
+  return path.resolve(__dirname, "..", "..", "src", "test", "test-workspace", path.join(...filename));
+}
 
 interface TestCase {
   name: string;
@@ -235,7 +240,7 @@ const testCases: TestCase[] = [
   {
     name: "file works for initialization",
     stc: {
-      file: path.resolve(__dirname, "..", "..", "src", "test", "test-workspace", "simple.go"),
+      file: relFilePath("simple.go"),
       selections: [
         new vscode.Selection(2, 4, 2, 4),
       ],
@@ -263,7 +268,7 @@ const testCases: TestCase[] = [
     name: "openFile works",
     stc: {
       userInteractions: [
-        openFile(path.resolve(__dirname, "..", "..", "src", "test", "test-workspace", "simple.go")),
+        openFile(relFilePath("simple.go")),
       ],
       expectedSelections: [
         new vscode.Selection(4, 5, 4, 5),
@@ -1404,6 +1409,77 @@ suite('Error Test Suite', () => {
         const gotError = (e as Error).message;
         assert.deepStrictEqual(gotError, tc.wantError);
       }
+    });
+  });
+});
+
+
+interface ExteriorFileChangeTestCase extends TestCase {
+  fileContents: string[];
+}
+
+const exteriorFileChangeTestCases: ExteriorFileChangeTestCase[] = [
+  // Basically, if a file was modified by other means (e.g. not SimpleTestCase
+  // and by user code in test setup), then sometimes the logic in this package
+  // would run before those file changes were picked up by the VS Code editor.
+  // This would result in file contents and/or selections from the end of one
+  // test to leak into the next test.
+  // For more examples (and potentially fuller testing of changes here),
+  // see the groogle.very-import-ant VS Code extension (and changes from around
+  // the same time (2/22/2025)).
+  //
+  // Removing the Waiter that checks for `...getText() === fileText`
+  // in the OpenFileExecution class will cause this to fail.
+  {
+    name: "Exterior file change part I",
+    runSolo: true,
+    fileContents: [
+      "un",
+      "deux",
+    ],
+    stc: {
+      expectedText: [
+        "un",
+        "deux",
+      ],
+      selections: [new vscode.Selection(1, 1, 1, 1)],
+      expectedSelections: [new vscode.Selection(1, 1, 1, 1)],
+    },
+  },
+  {
+    name: "Exterior file change part II", // See comment with above test for more details on why this is needed
+    runSolo: true,
+    fileContents: [
+      "un",
+      "deux",
+      "trois",
+      "quatre",
+    ],
+    stc: {
+      expectedText: [
+        "un",
+        "deux",
+        "trois",
+        "quatre",
+      ],
+    },
+  },
+];
+
+suite('Exterior file change test suite', () => {
+  exteriorFileChangeTestCases.forEach(tc => {
+
+    test(tc.name, async () => {
+
+      // NOTE: this exact logic is needed to ensure that file changes
+      // made immediately **before and outside of** SimpleTestCase execution
+      // are waited for during actual SimpleTestCase execution.
+      writeFileSync(relFilePath("empty.txt"), tc.fileContents.join("\n"));
+      tc.stc.file = relFilePath("empty.txt");
+
+      await new SimpleTestCase(tc.stc).runTest().catch(e => {
+        throw e;
+      });
     });
   });
 });

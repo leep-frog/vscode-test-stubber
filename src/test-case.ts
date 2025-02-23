@@ -72,7 +72,6 @@ class OpenFileExecution implements UserInteraction {
     await vscode.workspace.openTextDocument(joinedPath).then(doc => vscode.window.showTextDocument(doc));
     const fileText = readFileSync(joinedPath).toString();
     const w = new Waiter(3, () => {
-      console.log(`(TODO: Remove this log): Waiting for file text to be equal`);
       // Wait for the editor to be active AND for the text to be the right text.
       // Sometimes, if a file is opened immediately after updating, the editor
       // takes a second to update the text. This results in issues such as
