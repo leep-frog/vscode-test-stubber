@@ -2,7 +2,7 @@
   "name": "@leep-frog/vscode-test-stubber",
   "displayName": "vscode-test-stubber",
   "description": "",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "publisher": "groogle",
   "license": "MIT",
   "engines": {
