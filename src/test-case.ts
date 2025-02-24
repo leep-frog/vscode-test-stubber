@@ -338,6 +338,7 @@ export class SimpleTestCase implements TestCase {
         assert.deepStrictEqual(activeEditor.selections, this.props.expectedSelections || [new vscode.Selection(0, 0, 0, 0)], "Expected SELECTIONS to be exactly equal");
       }
     } finally {
+      await vscode.commands.executeCommand('notifications.clearAll');
       testCleanup(stubInfos);
     }
   }
