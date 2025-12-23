@@ -2,7 +2,7 @@
   "name": "@leep-frog/vscode-test-stubber",
   "displayName": "vscode-test-stubber",
   "description": "",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "publisher": "groogle",
   "license": "MIT",
   "engines": {
@@ -80,6 +80,7 @@
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^8.57.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }
 }
