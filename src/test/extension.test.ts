@@ -1077,27 +1077,33 @@ const errorTestCases: ErrorTestCase[] = [
     name: "fails if expectedSelections are off",
     wantError: [
       `Expected SELECTIONS to be exactly equal`,
-      `+ actual - expected ... Lines skipped`,
+      `+ actual - expected`,
+      `... Skipped lines`,
       ``,
       `  [`,
-      `    lv {`,
+      `    no {`,
+      `      _active: Le {`,
+      `        _character: 0,`,
+      `        _line: 0`,
       `...`,
+      `        _character: 1,`,
+      `+       _line: 1`,
+      `-       _line: 2`,
       `      },`,
-      `      e: co {`,
-      `+       c: 1,`,
-      `-       c: 2,`,
-      `        e: 1`,
+      `      _anchor: Le {`,
+      `        _character: 2,`,
+      `        _line: 0`,
       `      },`,
-      `...`,
+      `      _end: Le {`,
+      `        _character: 1,`,
+      `+       _line: 1`,
+      `-       _line: 2`,
       `      },`,
-      `      g: co {`,
-      `+       c: 1,`,
-      `-       c: 2,`,
-      `        e: 1`,
-      `...`,
+      `      _start: Le {`,
+      `        _character: 2,`,
+      `        _line: 0`,
       `      }`,
-      `    }`,
-      `  ]`,
+      ``,
     ].join('\n'),
     stc: {
       text: [
@@ -1135,6 +1141,7 @@ const errorTestCases: ErrorTestCase[] = [
       `+   'hello there'`,
       `+ ]`,
       `- []`,
+      ``,
     ].join("\n"),
     stc: {
       userInteractions: [
@@ -1150,10 +1157,10 @@ const errorTestCases: ErrorTestCase[] = [
       ``,
       `  [`,
       `+   'abc',`,
-      `+   'def'`,
-      `-   'def',`,
+      `    'def',`,
       `-   'ghi'`,
       `  ]`,
+      ``,
     ].join("\n"),
     stc: {
       userInteractions: [
@@ -1177,10 +1184,10 @@ const errorTestCases: ErrorTestCase[] = [
       ``,
       `  [`,
       `+   'abc',`,
-      `+   'def'`,
-      `-   'def',`,
+      `    'def',`,
       `-   'abc'`,
       `  ]`,
+      ``,
     ].join("\n"),
     stc: {
       userInteractions: [
@@ -1211,6 +1218,7 @@ const errorTestCases: ErrorTestCase[] = [
       '    },',
       '    languageConfiguration: Map(0) {}',
       '  }',
+      '',
     ].join("\n"),
     stc: {
       userInteractions: [
@@ -1267,6 +1275,7 @@ const errorTestCases: ErrorTestCase[] = [
       `      }`,
       `    }`,
       `  ]`,
+      ``,
     ].join("\n"),
     stc: {
       userInteractions: [
@@ -1295,6 +1304,7 @@ const errorTestCases: ErrorTestCase[] = [
       `+   'another response'`,
       `+ ]`,
       `- []`,
+      ``,
     ].join("\n"),
     stc: {
       userInteractions: [
