@@ -2,17 +2,17 @@
   "name": "@leep-frog/vscode-test-stubber",
   "displayName": "vscode-test-stubber",
   "description": "",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "publisher": "groogle",
   "license": "MIT",
   "engines": {
-    "vscode": "^1.87.0"
+    "vscode": "^1.140.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [],
-  "main": "./out/index.js",
+  "main": "./out/extension.js",
   "module": "./out/index.mjs",
   "types": "./out/index.d.ts",
   "files": [
@@ -73,14 +73,14 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "18.x",
-    "@types/vscode": "^1.88.0",
-    "@typescript-eslint/eslint-plugin": "^7.7.1",
-    "@typescript-eslint/parser": "^7.7.1",
-    "@vscode/test-cli": "^0.0.8",
-    "@vscode/test-electron": "^2.3.9",
-    "eslint": "^8.57.0",
+    "@types/node": "^22.20.5",
+    "@types/vscode": "^1.140.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^8.57.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.9.3"
   }
 }

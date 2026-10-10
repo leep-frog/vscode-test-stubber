@@ -270,6 +270,9 @@ export class FakeQuickPick<T extends vscode.QuickPickItem> implements vscode.Qui
   public get placeholder(): string | undefined { return this.realQuickPick.placeholder; }
   public set placeholder(s: string | undefined) { this.realQuickPick.placeholder = s; }
 
+  public get prompt(): string | undefined { return this.realQuickPick.prompt; }
+  public set prompt(s: string | undefined) { this.realQuickPick.prompt = s; }
+
   public get onDidChangeValue(): vscode.Event<string> { return this.realQuickPick.onDidChangeValue; }
 
   public get buttons(): readonly vscode.QuickInputButton[] { return this.realQuickPick.buttons; }
